@@ -1,0 +1,31 @@
+{% extends "admin/_base.html" %}{% block admin %}
+<h1>Releases</h1>
+<p class="sub">This server runs v{{ current }}. Publishing here is what makes every
+self-hosted instance offer the update on its next check-in.</p>
+
+<div class="card">
+  <form method="post" action="/admin/releases">
+    <div class="grid2">
+      <label>Version <span class="h">semver, e.g. 2.2.0</span><input type="text" name="version" required></label>
+      <label>Channel<select name="channel"><option>stable</option><option>beta</option></select></label>
+    </div>
+    <label>Download URL<input type="text" name="download_url" placeholder="https://.../creator-intel-2.2.0.zip"></label>
+    <label>SHA-256 <span class="h">the updater refuses a download that does not match</span><input type="text" name="sha256"></label>
+    <label>Release notes<textarea name="notes"></textarea></label>
+    <label style="display:flex;align-items:center;gap:8px">
+      <input type="checkbox" name="mandatory" value="1" style="width:auto"> Mandatory — clients must update to keep working</label>
+    <div style="margin-top:12px"><button type="submit">Publish</button></div>
+  </form>
+</div>
+
+<table><thead><tr><th>Version</th><th>Channel</th><th>Published</th><th>Mandatory</th><th>State</th><th></th></tr></thead><tbody>
+{% for r in releases %}<tr>
+<td><b>{{ r.version }}</b></td><td>{{ r.channel }}</td>
+<td class="muted">{{ r.published_at.strftime('%d %b %Y') }}</td>
+<td>{{ 'yes' if r.mandatory else '—' }}</td>
+<td><span class="badge {{ 'ok' if r.active else 'err' }}">{{ 'live' if r.active else 'withdrawn' }}</span></td>
+<td><form method="post" action="/admin/releases/{{ r.version }}/toggle" style="display:inline">
+  <button type="submit" style="background:none;border:0;color:var(--mut);cursor:pointer;text-decoration:underline;padding:0;font:inherit">{{ 'withdraw' if r.active else 'restore' }}</button></form></td>
+</tr>{% endfor %}
+</tbody></table>
+{% endblock %}

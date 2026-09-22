@@ -1,0 +1,33 @@
+{% extends "base.html" %}{% block title %}Start trial · {{ app_name }}{% endblock %}{% block body %}
+<span class="eyebrow">Trial</span>
+<h1>Start a trial</h1>
+{% if not open %}
+<div class="card"><p class="flash">Signups are closed right now.</p></div>
+{% else %}
+<p class="sub">{{ trial_days }} days, no card. You get a licence key — that key is your login.</p>
+<div class="card hero">
+  <form method="post" action="/signup">
+    <div class="grid2">
+      <label>Your name<input type="text" name="name" required></label>
+      <label>Email<input type="email" name="email" required></label>
+      <label>Company <span class="h">optional</span><input type="text" name="company"></label>
+      <label>Phone <span class="h">optional</span><input type="text" name="phone"></label>
+    </div>
+    <div style="margin-top:18px"><button type="submit">Create my key <span class="btn-arrow">→</span></button></div>
+  </form>
+</div>
+<h2>Plans</h2>
+<div class="grid2">
+{% for p in plans %}
+<div class="card flat" style="margin:0">
+  <p style="margin:0 0 4px"><b>{{ p.name }}</b> <span class="muted mono">{% if p.price_inr %}₹{{ "{:,}".format(p.price_inr) }}/mo{% else %}free{% endif %}</span></p>
+  <p class="muted" style="margin:0">{{ p.blurb }}</p>
+  <p class="muted" style="margin:8px 0 0">
+    {% if p.reports_per_month %}{{ p.reports_per_month }} reports/month{% else %}unlimited reports{% endif %}
+    · {{ p.seats }} seat(s) · cohort up to {{ p.max_cohort_size }}
+    {% if p.allow_selfhost %} · self-hosted{% endif %}</p>
+</div>
+{% endfor %}
+</div>
+{% endif %}
+{% endblock %}

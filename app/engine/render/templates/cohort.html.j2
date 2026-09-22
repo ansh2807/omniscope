@@ -1,0 +1,133 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<meta property="og:title" content="Audience Intelligence — {{ cp.title }}">
+<meta property="og:description" content="Comparative audience intelligence across {{ cp.reports|length }} creators.">
+<meta property="og:type" content="article">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%233dd68c'/%3E%3Ctext x='16' y='22' font-family='sans-serif' font-size='16' font-weight='800' fill='%2304140c' text-anchor='middle'%3ECI%3C/text%3E%3C/svg%3E">
+
+<title>{{ cp.title }}</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+{% include "_style.html.j2" %}
+</head><body>
+<a class="skip" href="#main">Skip to report</a>
+{% set co = cp.cohort %}
+<nav><div class="nv">
+<a href="#cohort">Cohort summary</a>
+{% for p in cp.reports %}<a href="#c{{ loop.index }}desk">{{ loop.index }} desk</a><a href="#c{{ loop.index }}exec">{{ loop.index }} · {{ p.subject_name }}</a>{% endfor %}
+</div></nav>
+<main id="main" class="wrap">
+<div class="cover">
+  <div class="kick">360° Audience Intelligence Report · {{ cp.reports|length }} creators</div>
+  <h1>{{ co.headline if co else cp.title }}</h1>
+  <div class="one">{{ co.lede if co else "" }}</div>
+  <div class="meta">Generated {{ cp.generated_at.strftime('%d %B %Y, %H:%M UTC') }} ·
+    engine v{{ cp.engine_version }} ·
+    summed public follows <b style="color:var(--txt)">{{ "{:,}".format(co.total_audience) if co else "—" }}</b> (duplicates unknown) ·
+    {{ cp.reports|length }} creators profiled</div>
+</div>
+
+{% if co %}
+<section id="cohort">
+<h2>00 — Cohort Summary</h2>
+<div class="lede">What only exists in relation to the others.</div>
+{% for f in co.findings %}<div class="call {{ f.kind }}"><b>{{ loop.index }} · {{ f.title }}</b><p>{{ f.body }}</p></div>{% endfor %}
+
+<h3>Side by side</h3>
+<div class="tw"><table>
+<thead><tr><th>Creator</th><th>Summed follows</th><th>Modal life stage</th><th>Gender</th><th>Income</th><th>Language</th><th>Platform</th><th>Price ceiling</th><th>Measured peak</th><th>Life-stage conf.</th></tr></thead><tbody>
+{% for m in co.matrix %}<tr>
+<td><b>{{ m.name }}</b><div class="src">{{ m.one_liner }}</div></td>
+<td class="n">{{ m.audience }}</td><td class="n">{{ m.modal_age }}</td><td class="n">{{ m.gender }}</td>
+<td class="n">{{ m.income_modal }}</td><td>{{ m.language }}</td><td>{{ m.primary_platform }}</td>
+<td class="n">{{ m.price_ceiling }}</td><td>{{ m.peak_month }}</td><td class="n">{{ m.confidence }}</td></tr>{% endfor %}
+</tbody></table></div>
+
+<h3>Follower overlap and topic affinity</h3>
+<div class="tw"><table><thead><tr><th style="width:26%">Pair</th><th>Follower overlap</th><th>Affinity hypothesis</th><th>Topic similarity</th></tr></thead><tbody>
+{% for o in co.overlaps %}<tr><td><b>{{ o.a }} ↔ {{ o.b }}</b></td>
+<td class="n"><span class="chip una">UNAVAILABLE</span></td><td>{{ o.mechanism }}</td>
+<td class="n">{{ o.topic_similarity }}% <span class="chip obs">CALCULATED</span></td></tr>{% endfor %}
+</tbody></table></div>
+
+<h3>Lifecycle position</h3>
+<div class="chartbox"><p class="cap">Ordered by modelled content-relevant life stage. This is not proof that the same people move between creators.</p><div class="cw"><canvas id="cLife"></canvas></div></div>
+<div class="tw"><table><thead><tr><th style="width:20%">Creator</th><th>Median age</th><th>Modal band</th><th>Archetype</th><th>Audience</th></tr></thead><tbody>
+{% for l in co.lifecycle %}<tr><td><b>{{ l.name }}</b><div class="src">{{ l.handle }}</div></td>
+<td class="n">{{ l.median_age }}</td><td class="n">{{ l.modal_band }}</td><td>{{ l.archetype }}</td>
+<td>{{ l.one_liner.split('—')[0] }}</td></tr>{% endfor %}
+</tbody></table></div>
+
+<h3>Pilot diligence</h3>
+<div class="tw"><table><thead><tr><th style="width:18%">Creator</th><th style="width:24%">Public evidence</th><th>Cost efficiency</th><th>Scale ceiling</th><th>Recommendation</th></tr></thead><tbody>
+{% for v in co.verdicts %}<tr><td><b>{{ v.name }}</b></td><td>{{ v.best_for }}</td><td>{{ v.efficiency }}</td>
+<td>{{ v.scale_ceiling }}</td><td>{{ v.recommendation }}</td></tr>{% endfor %}
+</tbody></table></div>
+<p class="src">Commercial efficiency and scale remain unavailable until a trackable pilot and first-party reach evidence are supplied. <span class="chip una">UNAVAILABLE</span></p>
+{% if co.seasonality_note %}<div class="call opportunity"><b>Seasonality across the set</b><p>{{ co.seasonality_note }}</p></div>{% endif %}
+</section>
+{% endif %}
+
+{% for p in cp.reports %}
+{% set a = p.audience %}{% set pre = "c" ~ loop.index %}
+<div style="padding:56px 0 6px;border-top:2px solid var(--acc);margin-top:34px">
+  <div class="kick">Creator {{ "%02d"|format(loop.index) }} · {{ a.archetype_label }}</div>
+  <h1 style="font-size:34px;font-weight:800;letter-spacing:-.02em">{{ p.subject_name }}</h1>
+  <div class="handle" style="font-family:ui-monospace,Menlo,monospace;color:var(--mut);font-size:13px;margin-top:8px">{{ p.subject_handle }}</div>
+  <div class="one" style="font-size:17px;margin-top:14px;max-width:840px">{{ a.one_liner }}</div>
+</div>
+{% include "_creator.html.j2" %}
+{% include "_appendix.html.j2" %}
+{% endfor %}
+
+<footer>{{ cp.title }} · generated {{ cp.generated_at.strftime('%d %b %Y') }} · engine v{{ cp.engine_version }}. Figures drift; re-generate before contracting.</footer>
+</main>
+{% include "_charts.html.j2" %}
+{% if co %}
+<script>
+(function(){
+const T='#8b98a5',G='#232b36';
+const L={{ lifecycle_data|tojson }};
+const el=document.getElementById('cLife');if(!el)return;
+new Chart(el,{type:'bubble',data:{datasets:L.map(function(d,i){return{
+ label:d.name,data:[{x:d.x,y:d.y,r:d.r}],
+ backgroundColor:['rgba(79,156,249,.65)','rgba(167,139,250,.65)','rgba(63,185,80,.65)','rgba(240,136,62,.65)','rgba(139,152,165,.6)','rgba(255,123,114,.6)'][i%6]};})},
+ options:{maintainAspectRatio:false,scales:{
+  x:{grid:{color:G},ticks:{color:T},title:{display:true,text:'Content-relevant life stage midpoint (modelled)',color:T}},
+  y:{grid:{color:G},ticks:{display:false},min:0,max:Math.max(2,L.length+1),title:{display:true,text:'Visual separation only',color:T}}},
+  plugins:{legend:{position:'bottom'}}}});
+})();
+</script>
+{% endif %}
+<script>
+/* Marks the section currently in view in the sticky nav. Without it a reader
+   seventeen sections deep has no idea where they are. Uses IntersectionObserver
+   rather than a scroll handler so it costs nothing on long documents. */
+(function(){
+  var links = [].slice.call(document.querySelectorAll('nav .nv a[href^="#"]'));
+  if (!links.length || !('IntersectionObserver' in window)) return;
+  var byId = {};
+  links.forEach(function(a){ byId[a.getAttribute('href').slice(1)] = a; });
+  var targets = Object.keys(byId)
+    .map(function(id){ return document.getElementById(id); })
+    .filter(Boolean);
+  if (!targets.length) return;
+  var seen = {};
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){ seen[e.target.id] = e.isIntersecting; });
+    var current = null;
+    for (var i = 0; i < targets.length; i++) {
+      if (seen[targets[i].id]) { current = targets[i].id; break; }
+    }
+    if (!current) return;
+    links.forEach(function(a){ a.classList.remove('on'); });
+    if (byId[current]) {
+      byId[current].classList.add('on');
+      byId[current].setAttribute('aria-current', 'true');
+    }
+  }, { rootMargin: '-72px 0px -70% 0px', threshold: 0 });
+  targets.forEach(function(t){ io.observe(t); });
+})();
+</script>
+</body></html>

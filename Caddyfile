@@ -1,0 +1,37 @@
+# Automatic HTTPS. Caddy handles certificate issuance and renewal itself.
+{$DOMAIN} {
+	encode zstd gzip
+
+	# Razorpay webhooks must reach the app with the body untouched, so no
+	# rewriting or buffering on this path.
+	handle /billing/webhook {
+		reverse_proxy app:8000
+	}
+
+	# The admin panel is the highest-value target on the box. Restrict it to
+	# your own IPs — uncomment and set them before going live.
+	# handle /admin* {
+	# 	@allowed remote_ip 203.0.113.10 198.51.100.0/24
+	# 	handle @allowed { reverse_proxy app:8000 }
+	# 	respond 404
+	# }
+
+	handle {
+		reverse_proxy app:8000
+	}
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "SAMEORIGIN"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
+
+	log {
+		output file /data/access.log {
+			roll_size 20mb
+			roll_keep 5
+		}
+	}
+}

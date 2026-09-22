@@ -1,0 +1,60 @@
+{% extends "base.html" %}{% block title %}Library · {{ app_name }}{% endblock %}{% block body %}
+<div class="page-head">
+  <span class="eyebrow">Library</span>
+  <h1>Report library</h1>
+  <p class="sub">Search, filter and sort finished packs. Each report is deleted after {{ report_ttl_label }} — download it first.</p>
+</div>
+
+<div class="card">
+  <form method="get" action="/library" class="row">
+    <input type="search" name="q" value="{{ q }}" placeholder="Search name or handle">
+    <select name="verdict" style="max-width:200px">
+      <option value="">All verdicts</option>
+      {% for v in ['prioritize','pilot','hold','pass','insufficient_evidence','cohort'] %}
+      <option value="{{ v }}" {{ 'selected' if verdict==v else '' }}>{{ v }}</option>
+      {% endfor %}
+    </select>
+    <select name="sort" style="max-width:180px">
+      <option value="newest" {{ 'selected' if sort=='newest' else '' }}>Newest</option>
+      <option value="fit" {{ 'selected' if sort=='fit' else '' }}>Best fit</option>
+      <option value="confidence" {{ 'selected' if sort=='confidence' else '' }}>Confidence</option>
+    </select>
+    <button type="submit">Filter</button>
+  </form>
+</div>
+
+{% if reports %}
+<div class="table-wrap">
+<table>
+<thead><tr><th>Creator</th><th>Kind</th><th>Fit</th><th>Verdict</th><th>Confidence</th><th>Generated</th><th></th></tr></thead>
+<tbody>
+{% for r in reports %}
+<tr>
+  <td><b>{{ r.subject_name }}</b><div class="muted">{{ r.subject_handle }}</div></td>
+  <td><span class="badge run">{{ r.kind }}</span></td>
+  <td class="mono">{% if r.fit_score is not none %}<b>{{ r.fit_score }}</b>{% else %}—{% endif %}</td>
+  <td>{% if r.media_verdict %}<span class="badge {{ 'ok' if r.media_verdict in ('prioritize','pilot') else ('warn' if r.media_verdict in ('hold','cohort','insufficient_evidence') else 'err') }}">{{ r.media_verdict }}</span>{% else %}—{% endif %}</td>
+  <td class="mono">{{ (r.overall_confidence*100)|round|int }}%</td>
+  <td class="muted mono">{{ r.created_at.strftime('%d %b %Y %H:%M') }}</td>
+  <td class="actions">
+    <a href="/r/{{ r.share_slug }}">open</a>
+    · <a href="/r/{{ r.share_slug }}.html">html</a>
+    {% if r.payload_json %} · <a href="/r/{{ r.share_slug }}.json">json</a>{% endif %}
+    {% if r.docx_path %} · <a href="/r/{{ r.share_slug }}.docx">docx</a>{% endif %}
+    {% if report_ttl_minutes %} · <span class="muted mono" data-ttl="{{ r.created_at|ttl_left }}">…</span>{% endif %}
+    {% if r.kind == 'single' %} ·
+    <form method="post" action="/shortlists/quick-add">
+      <input type="hidden" name="report_id" value="{{ r.id }}">
+      <button class="ghost" type="submit">shortlist</button>
+    </form>
+    {% endif %}
+  </td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+{% else %}
+<div class="empty">No reports match. <a href="/">Generate one</a>.</div>
+{% endif %}
+{% endblock %}

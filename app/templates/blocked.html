@@ -1,0 +1,11 @@
+{% extends "base.html" %}{% block body %}
+<span class="eyebrow">Blocked</span>
+<h1>Can't run that yet</h1>
+<div class="card soft-warn">
+  <p class="flash">{{ reason }}</p>
+</div>
+<div class="row" style="margin-top:18px">
+  <a class="btn" href="/billing">See plans</a>
+  <a class="btn secondary" href="/">← back</a>
+</div>
+{% endblock %}

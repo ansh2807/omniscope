@@ -1,0 +1,37 @@
+# Production stack behind the existing Caddy on keyforge_default.
+# SQLite on the reports volume — do not start a second Caddy or Postgres here.
+
+services:
+  app:
+    build: .
+    image: omniscope:8.23.0
+    container_name: omniscope-app
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL: sqlite:////srv/data/creatorintel.db
+      REPORTS_DIR: /srv/data/reports
+      CACHE_DIR: /srv/data/cache
+      DOCUMENTS_DIR: /srv/data/documents
+      DEPLOYMENT_MODE: saas
+    volumes:
+      - reports:/srv/data
+    expose: ["8000"]
+    mem_limit: 3g
+    shm_size: "256mb"
+    networks:
+      - default
+      - edge
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+networks:
+  edge:
+    external: true
+    name: ${EDGE_NETWORK:-keyforge_default}
+
+volumes:
+  reports:

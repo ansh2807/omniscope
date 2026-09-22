@@ -1,0 +1,153 @@
+{% extends "base.html" %}{% block title %}Analyze · {{ app_name }}{% endblock %}{% block body %}
+<span class="eyebrow">Marketing intelligence</span>
+<h1>Drop anything. Get the report in your inbox.</h1>
+<p class="sub">Paste a website, company, creator or keyword. You get the full product — no trial, no paywall. Email is optional. The pack stays on this site for {{ report_ttl_label }}, then it is deleted. No account.</p>
+
+<div class="bento" style="margin:28px 0">
+  <div class="card hero span-8">
+    <h2 class="plain">Deep analyze</h2>
+    {% if form_error == 'email' %}
+    <p class="muted" style="color:var(--bad)">Enter a valid email so we can send the report.</p>
+    {% elif form_error == 'url' %}
+    <p class="muted" style="color:var(--bad)">Paste a website, creator, company or keyword first.</p>
+    {% elif form_error == 'key' %}
+    <p class="muted" style="color:var(--bad)">Paste a Serper API key, or switch back to the free path.</p>
+    {% endif %}
+    <form method="post" action="/generate" id="analyze-form">
+      <label>Your email
+        <span class="h">Optional. If SMTP is configured we send the pack here. We do not create an account.</span>
+        <input type="email" name="email" autocomplete="email"
+               placeholder="you@company.com (optional)" value="{{ remembered_email or '' }}">
+      </label>
+      <label>Paste anything
+        <span class="h">Creator, website, company, keyword, or a public post/video URL.</span>
+        <textarea name="url" id="seed-input" placeholder="https://www.instagram.com/handle/&#10;acme.com&#10;Acme Software" required></textarea>
+      </label>
+      <div class="pill-row" aria-label="Examples">
+        <button type="button" class="example-chip" data-fill="stripe.com">stripe.com</button>
+        <button type="button" class="example-chip" data-fill="wikipedia.org">wikipedia.org</button>
+        <button type="button" class="example-chip" data-fill="Notion">Notion</button>
+        <button type="button" class="example-chip" data-fill="https://www.youtube.com/@veritasium">YouTube @veritasium</button>
+      </div>
+      <div class="path-pick">
+        <div class="lbl">Search depth</div>
+        <label class="path-card">
+          <input type="radio" name="search_mode" value="free" checked>
+          <span>
+            <b>Free — no key</b>
+            <span class="h">Wikipedia, Archive.org, Hacker News, and pages the site allows us to read. Figures stay copied from those sources. No invented traffic or rankings.</span>
+          </span>
+        </label>
+        <label class="path-card">
+          <input type="radio" name="search_mode" value="serper">
+          <span>
+            <b>I have a Serper key</b>
+            <span class="h">Adds Google search for competitors, news and the market map. Free quota at <a href="https://serper.dev" target="_blank" rel="noopener">serper.dev</a>.</span>
+          </span>
+        </label>
+      </div>
+      <div id="serper-fields" hidden>
+        <label>Serper API key
+          <span class="h">Saved in this browser if you tick remember. Used for this report only — not stored on our servers.</span>
+          <input type="password" name="serper_key" id="serper-key" autocomplete="on"
+                 placeholder="paste from serper.dev" disabled>
+        </label>
+        <label style="font-weight:500;font-size:13px;margin-top:10px;display:flex;gap:10px;align-items:flex-start">
+          <input type="checkbox" id="remember-serper" checked style="margin-top:3px">
+          <span>Remember this key on this device</span>
+        </label>
+      </div>
+      <label style="font-weight:500;font-size:13px;margin-top:14px;display:flex;gap:10px;align-items:flex-start">
+        <input type="checkbox" name="with_competitors" value="1" style="margin-top:3px">
+        <span>Run competitor discovery <span class="h" style="display:inline">stronger with a Serper key; free path still lists what public sources name</span></span>
+      </label>
+      <div class="row" style="margin-top:18px">
+        <button type="submit">Deep analyze <span class="btn-arrow">→</span></button>
+      </div>
+      <p class="muted" style="margin:16px 0 0">
+        {% if smtp_ready %}The finished pack is emailed when you leave an address, then removed from the site after {{ report_ttl_label }}.{% else %}Download from the job page within {{ report_ttl_label }}. Email delivery is not configured on this instance yet.{% endif %}
+      </p>
+    </form>
+  </div>
+  <div class="span-4 stack">
+    <div class="feature"><b>Full product</b><span>Every engine runs. No trial cap. Free path uses public sources; a Serper key only adds Google search.</span></div>
+    <div class="feature"><b>No account</b><span>Email is optional. Optional Serper key is remembered in this browser, not on our servers.</span></div>
+    <div class="feature"><b>Kept {{ report_ttl_label }}</b><span>Open or download the report, then it is deleted from our servers.</span></div>
+    <div class="feature"><b>Marketing desk</b><span>The pack opens on eight basic needs — who you are, what you sell, proof, demand, channels, conversion, trust, measurement. Empty stays unavailable.</span></div>
+  </div>
+</div>
+
+<h2>What you will understand</h2>
+<p class="sub">Most tools dump traffic estimates. We start with the questions a marketer can act on this week, then show the evidence — or say we do not have it. <a href="/desk">Read the desk</a>.</p>
+<div class="bento">
+  <div class="card span-3"><b>Who you appear to be</b><span class="muted">The homepage sentence a stranger would repeat.</span></div>
+  <div class="card span-3"><b>What you sell</b><span class="muted">A named offer or plan. A slogan is not an offer.</span></div>
+  <div class="card span-3"><b>Why believe you</b><span class="muted">On-page reviews or a printed rating — not star copy.</span></div>
+  <div class="card span-3"><b>Whether anyone is looking</b><span class="muted">News, named rivals, missing paths. Not invented volume.</span></div>
+  <div class="card span-3"><b>Where you already show up</b><span class="muted">Owned site and feed. Linked socials. ads.txt is not spend.</span></div>
+  <div class="card span-3"><b>Can a stranger act</b><span class="muted">A form, demo, buy or contact path with one next step.</span></div>
+  <div class="card span-3"><b>Why they should start</b><span class="muted">Privacy, a public contact, HTTPS.</span></div>
+  <div class="card span-3"><b>Can you learn next week</b><span class="muted">A sitemap and one analytics tool. Not a traffic number.</span></div>
+</div>
+<script>
+(function(){
+  var KEY = "omni.serper_key";
+  var MODE = "omni.search_mode";
+  var REM = "omni.remember_serper";
+  var EMAIL = "omni.email";
+  var form = document.getElementById("analyze-form");
+  if (!form) return;
+  var keyInput = document.getElementById("serper-key");
+  var rem = document.getElementById("remember-serper");
+  var box = document.getElementById("serper-fields");
+  var seed = document.getElementById("seed-input");
+  var email = form.querySelector("input[name=email]");
+  form.querySelectorAll(".example-chip").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      if (seed) { seed.value = btn.getAttribute("data-fill") || ""; seed.focus(); }
+    });
+  });
+  try {
+    if (email && !email.value) {
+      var savedEmail = localStorage.getItem(EMAIL);
+      if (savedEmail) email.value = savedEmail;
+    }
+  } catch (e) {}
+  function mode(){
+    var el = form.querySelector("input[name=search_mode]:checked");
+    return el ? el.value : "free";
+  }
+  function sync(){
+    var on = mode() === "serper";
+    if (box) box.hidden = !on;
+    if (keyInput) keyInput.disabled = !on;
+    if (on && keyInput && rem && rem.checked && !keyInput.value) {
+      try { var saved = localStorage.getItem(KEY); if (saved) keyInput.value = saved; } catch (e) {}
+    }
+  }
+  form.querySelectorAll("input[name=search_mode]").forEach(function(r){
+    r.addEventListener("change", sync);
+  });
+  try {
+    if (localStorage.getItem(MODE) === "serper") {
+      var pick = form.querySelector("input[name=search_mode][value=serper]");
+      if (pick) pick.checked = true;
+    }
+    if (localStorage.getItem(REM) === "0" && rem) rem.checked = false;
+  } catch (e) {}
+  sync();
+  form.addEventListener("submit", function(){
+    try {
+      if (email && email.value) localStorage.setItem(EMAIL, email.value);
+      localStorage.setItem(MODE, mode());
+      if (rem) localStorage.setItem(REM, rem.checked ? "1" : "0");
+      if (mode() === "serper" && rem && rem.checked && keyInput && keyInput.value) {
+        localStorage.setItem(KEY, keyInput.value);
+      } else if (!rem || !rem.checked) {
+        localStorage.removeItem(KEY);
+      }
+    } catch (e) {}
+  });
+})();
+</script>
+{% endblock %}

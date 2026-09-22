@@ -1,0 +1,34 @@
+{% extends "admin/_base.html" %}{% block admin %}
+<h1>Overview</h1>
+<p class="sub">Billing period {{ period }}</p>
+
+<div class="grid2" style="margin-bottom:16px">
+  <div class="card"><b style="font-size:26px">₹{{ "{:,}".format(stats.mrr) }}</b>
+    <div class="muted">MRR from active subscriptions</div></div>
+  <div class="card"><b style="font-size:26px">{{ stats.reports_this_month }}</b>
+    <div class="muted">reports generated this period</div></div>
+</div>
+<div class="card">
+  <span class="badge ok">{{ stats.active }} active</span>
+  <span class="badge warn">{{ stats.trial }} trial</span>
+  <span class="badge err">{{ stats.past_due }} past due</span>
+  <span class="badge">{{ stats.orgs }} total</span>
+  {% if not razorpay_ready %}<span class="badge err">Razorpay not configured</span>{% endif %}
+</div>
+
+<h2>Accounts</h2>
+<table><thead><tr><th>Account</th><th>Plan</th><th>Status</th><th>Usage</th><th>Created</th></tr></thead><tbody>
+{% for o in orgs %}
+<tr>
+  <td><a href="/admin/org/{{ o.id }}"><b>{{ o.name }}</b></a>
+    <div class="muted">{{ o.email }}{% if o.company %} · {{ o.company }}{% endif %}</div></td>
+  <td>{{ plans[o.plan_code].name if o.plan_code in plans else o.plan_code }}
+    {% if o.mode == 'selfhost' %}<span class="badge">self-host</span>{% endif %}</td>
+  <td><span class="badge {{ 'ok' if o.status=='active' else 'warn' if o.status in ('trial','past_due') else 'err' }}">{{ o.status }}</span>
+    {% if o.override_until %}<span class="badge ok">override</span>{% endif %}</td>
+  <td class="muted">{% if o.id in usage %}{{ usage[o.id].reports_used }} reports{% else %}—{% endif %}</td>
+  <td class="muted">{{ o.created_at.strftime('%d %b %y') }}</td>
+</tr>
+{% endfor %}
+</tbody></table>
+{% endblock %}

@@ -1,0 +1,15 @@
+.venv
+.git
+data
+.env
+tests
+docs
+__pycache__
+*.pyc
+.pytest_cache
+backups
+*.md
+START.bat
+ENABLE-BROWSER.bat
+Caddyfile
+docker-compose.yml

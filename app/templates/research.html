@@ -1,0 +1,57 @@
+{% extends "base.html" %}{% block title %}Research · {{ app_name }}{% endblock %}{% block body %}
+<div class="page-head">
+  <span class="eyebrow">Research</span>
+  <h1>Resolve, then prove</h1>
+  <p class="sub">Look up a stored entity by domain or handle, or add a digital document as evidence. Nothing here is inferred from a filename.</p>
+</div>
+
+<div class="bento" style="margin-bottom:28px">
+  <div class="card span-6">
+    <h2 class="plain">Resolve identity</h2>
+    <form method="post" action="/research">
+      <label>Paste a domain, profile or name
+        <input type="text" name="q" value="{{ q }}" placeholder="acme.example or @acme" required>
+      </label>
+      <div style="margin-top:16px"><button type="submit">Resolve</button></div>
+    </form>
+    {% if result %}
+    <p style="margin-top:18px"><span class="badge {{ 'ok' if result.verdict == 'resolved' else 'warn' }}">{{ result.verdict }}</span></p>
+    {% if result.reason %}<p class="muted">{{ result.reason }}</p>{% endif %}
+    {% for m in result.matches or result.candidates %}
+    <p><a href="/entities/{{ m.entity_id }}"><b>{{ m.name }}</b></a>
+      <span class="muted">{{ m.kind }} · {{ m.reason }} · {{ '%.0f'|format(m.confidence * 100) }}%</span></p>
+    {% endfor %}
+    {% endif %}
+  </div>
+  <div class="card span-6">
+    <h2 class="plain">Upload document</h2>
+    <p class="muted">PDF, DOCX, TXT, CSV or HTML. Max {{ max_mb }} MB. Scanned PDFs are not OCRed.</p>
+    <form method="post" action="/research/documents" enctype="multipart/form-data">
+      <input type="file" name="file" accept=".pdf,.docx,.txt,.csv,.html,.htm" required>
+      <div style="margin-top:16px"><button type="submit">Extract</button></div>
+    </form>
+    {% if error %}<p class="muted" style="color:var(--bad)">{{ error }}</p>{% endif %}
+  </div>
+</div>
+
+<h2>Documents</h2>
+{% if documents %}
+<div class="table-wrap">
+<table>
+<thead><tr><th>File</th><th>Chars</th><th>Awards mentioned</th><th>When</th></tr></thead>
+<tbody>
+{% for d in documents %}
+<tr>
+  <td><b>{{ d.filename }}</b><div class="muted">{{ d.excerpt[:140] }}</div></td>
+  <td class="mono">{{ d.chars }}</td>
+  <td class="muted">{{ (d.intel().get('award_hits') or [])|join(', ') or '—' }}</td>
+  <td class="muted mono">{{ d.created_at.strftime('%d %b %Y %H:%M') }}</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+{% else %}
+<div class="empty">No documents uploaded yet.</div>
+{% endif %}
+{% endblock %}

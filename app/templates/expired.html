@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Report expired · {{ app_name }}</title>
+  <style>
+    body{margin:0;min-height:100dvh;display:grid;place-items:center;background:#0a0c0f;color:#f3f5f8;
+      font:16px/1.55 Outfit,ui-sans-serif,system-ui,sans-serif;padding:32px}
+    main{max-width:36rem}
+    h1{font-size:1.6rem;margin:0 0 12px}
+    p{color:#9aa3b2;margin:0 0 14px}
+    a{color:#3dd68c}
+  </style>
+</head>
+<body>
+  <main>
+    <h1>This report has been deleted</h1>
+    <p>Each report is removed after {{ minutes }} minutes. Download the HTML, JSON, or Word file before the timer ends next time — the server does not keep a copy.</p>
+    <p><a href="/">Back to workspace</a></p>
+  </main>
+</body>
+</html>

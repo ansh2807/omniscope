@@ -1,0 +1,53 @@
+{% extends "base.html" %}{% block title %}Billing · {{ app_name }}{% endblock %}{% block body %}
+<p class="back"><a href="/">← Workspace</a></p>
+<div class="page-head">
+  <h1>Billing</h1>
+  <p class="sub">{{ org.name }} · {{ org.email }}</p>
+</div>
+
+<div class="card hero">
+  <span class="eyebrow">Current plan</span>
+  <h2 class="plain" style="font-size:1.4rem;margin-bottom:8px">{{ ent.plan.name }}</h2>
+  <p class="muted" style="margin:0"><span class="badge {{ 'ok' if ent.allowed else 'err' }}">{{ org.status }}</span> {{ ent.reason }}</p>
+  <p class="muted" style="margin:10px 0 0">
+    {{ ent.reports_used }} reports used this period
+    {% if not ent.unlimited %}· {{ ent.reports_left }} left of {{ ent.reports_limit }}{% else %}· unlimited{% endif %}
+  </p>
+  {% if not ent.unlimited and ent.reports_limit %}
+  <div class="bar"><i style="width:{{ (ent.reports_used / ent.reports_limit * 100)|round|int if ent.reports_limit else 0 }}%"></i></div>
+  {% endif %}
+</div>
+
+{% if not razorpay_ready %}
+<div class="card soft-warn">
+  <p class="muted flash">Billing is not switched on for this server yet. Contact us and we will set the plan manually.</p>
+</div>
+{% endif %}
+
+<h2>Plans</h2>
+<div class="grid2">
+{% for p in plans %}
+{% if p.price_inr > 0 %}
+<div class="card lift" style="margin:0{% if p.code == org.plan_code %};border-color:rgba(61,214,140,.35){% endif %}">
+  <p style="margin:0 0 4px;font-size:16px"><b>{{ p.name }}</b> <span class="muted mono">₹{{ "{:,}".format(p.price_inr) }}/mo</span>
+    {% if p.code == org.plan_code %}<span class="badge ok">current</span>{% endif %}</p>
+  <p class="muted" style="margin:0 0 10px">{{ p.blurb }}</p>
+  <p class="muted" style="margin:0 0 14px">
+    {% if p.reports_per_month %}{{ p.reports_per_month }} reports/month{% else %}unlimited{% endif %}
+    · {{ p.seats }} seat(s) · cohort up to {{ p.max_cohort_size }}
+    {% if p.allow_selfhost %} · self-hosted{% endif %}
+    {% if p.allow_api %} · API{% endif %}
+    {% if p.allow_white_label %} · white label{% endif %}</p>
+  {% if razorpay_ready and p.code != org.plan_code %}
+  <form method="post" action="/billing/subscribe">
+    <input type="hidden" name="plan_code" value="{{ p.code }}">
+    <button type="submit">Subscribe</button>
+  </form>
+  {% endif %}
+</div>
+{% endif %}
+{% endfor %}
+</div>
+
+<p class="muted" style="margin-top:20px">Payments are handled by Razorpay. Card and UPI details never touch this server.</p>
+{% endblock %}

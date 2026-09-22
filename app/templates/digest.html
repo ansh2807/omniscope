@@ -1,0 +1,50 @@
+{% extends "base.html" %}{% block title %}Digest · {{ app_name }}{% endblock %}{% block body %}
+<div class="page-head">
+  <span class="eyebrow">Proactive</span>
+  <h1>Watch digest</h1>
+  <p class="sub">Stored alerts, score moves of 3+ points, and crisis/criticism news from the last {{ intel.days }} days. These are changes you can read — title, feed, tech — not a threat score. Quiet watched entities mean no stored change, not a health certificate.</p>
+  <form method="get" action="/digest" style="margin-top:12px">
+    <label class="muted" for="days">Window</label>
+    <select id="days" name="days" onchange="this.form.submit()">
+      {% for d in [1, 7, 14, 30] %}
+      <option value="{{ d }}" {% if intel.days == d %}selected{% endif %}>{{ d }} day{{ 's' if d != 1 else '' }}</option>
+      {% endfor %}
+    </select>
+  </form>
+</div>
+
+<div class="grid4" style="margin:24px 0">
+  <div class="stat"><div class="lbl">Alerts</div><div class="big">{{ intel.alert_n }}</div></div>
+  <div class="stat"><div class="lbl">Score moves</div><div class="big">{{ intel.score_n }}</div></div>
+  <div class="stat"><div class="lbl">Crisis / criticism</div><div class="big">{{ intel.news_n }}</div></div>
+  <div class="stat"><div class="lbl">Watched</div><div class="big">{{ intel.watched_n }}</div><div class="sm">{{ intel.silent_watched|length }} quiet</div></div>
+</div>
+
+{% if intel.items %}
+<div class="table-wrap">
+<table>
+<thead><tr><th>When</th><th>Entity</th><th>Kind</th><th>Event</th></tr></thead>
+<tbody>
+{% for e in intel.items %}
+<tr>
+  <td class="muted mono">{{ e.at.replace('T', ' ')[:16] }}</td>
+  <td>{% if e.href %}<a href="{{ e.href }}">{{ e.entity_name }}</a>{% else %}{{ e.entity_name }}{% endif %}</td>
+  <td><span class="badge run">{{ e.kind }}</span>{% if e.severity %} · {{ e.severity }}{% endif %}</td>
+  <td><b>{{ e.title }}</b>{% if e.detail %}<div class="muted">{{ e.detail }}</div>{% endif %}</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+{% elif intel.assessed %}
+<div class="empty">{{ intel.reason or 'No stored change in this window.' }}</div>
+{% else %}
+<div class="empty">{{ intel.reason }}</div>
+{% endif %}
+
+{% if intel.silent_watched %}
+<h2>Watched, no stored change</h2>
+<p class="muted">{{ intel.silent_watched|join(' · ') }}</p>
+{% endif %}
+<p class="muted" style="margin-top:16px">{{ intel.methodology }}</p>
+{% endblock %}

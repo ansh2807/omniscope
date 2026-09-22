@@ -1,0 +1,41 @@
+{% extends "base.html" %}{% block title %}Entities · {{ app_name }}{% endblock %}{% block body %}
+<div class="page-head">
+  <span class="eyebrow">Intelligence graph</span>
+  <h1>Entities</h1>
+  <p class="sub">Resolved surfaces. A website and a social account become linked only when they share a domain or a platform handle — never because the names look similar. <a href="/graph">Open the graph map</a>.</p>
+</div>
+
+{% if entities %}
+<div class="table-wrap">
+<table>
+<thead><tr><th>Entity</th><th>Kind</th><th>Score</th><th>Watch</th><th>Updated</th><th></th></tr></thead>
+<tbody>
+{% for e in entities %}
+<tr>
+  <td>
+    <b><a href="/entities/{{ e.id }}">{{ e.name }}</a></b>
+    <div class="muted">{{ e.domain or e.canonical_url }}</div>
+  </td>
+  <td><span class="badge run">{{ e.kind }}</span></td>
+  <td class="mono">{% if e.last_score is not none %}<b>{{ e.last_score }}</b>{% else %}—{% endif %}</td>
+  <td>
+    <form method="post" action="/entities/{{ e.id }}/watch">
+      <button type="submit" class="ghost">{{ 'watching' if e.watched else 'watch' }}</button>
+    </form>
+  </td>
+  <td class="muted mono">{{ e.updated_at.strftime('%d %b %Y %H:%M') }}</td>
+  <td class="actions">
+    <form method="post" action="/generate">
+      <input type="hidden" name="url" value="{{ e.canonical_url or e.domain }}">
+      <button type="submit" class="ghost">re-analyze</button>
+    </form>
+  </td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+{% else %}
+<div class="empty">No entities yet. Deep-analyze a website and it will land here.</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,27 @@
+{% extends "base.html" %}{% block title %}{{ title }} · {{ app_name }}{% endblock %}{% block body %}
+<div class="page-head">
+  <span class="eyebrow">{{ eyebrow }}</span>
+  <h1>{{ title }}</h1>
+  <p class="sub">{{ intro }}</p>
+</div>
+
+{% if rows %}
+<div class="table-wrap">
+<table>
+<thead><tr>{% for h in headers %}<th>{{ h }}</th>{% endfor %}</tr></thead>
+<tbody>
+{% for row in rows %}
+<tr>
+  {% for cell in row.cells %}
+  <td>{% if loop.first and row.href %}<a href="{{ row.href }}">{{ cell }}</a>{% else %}{{ cell }}{% endif %}</td>
+  {% endfor %}
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+{% else %}
+<div class="empty">{{ empty }}</div>
+{% endif %}
+{% if note %}<p class="muted" style="margin-top:16px">{{ note }}</p>{% endif %}
+{% endblock %}

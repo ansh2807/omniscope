@@ -1,0 +1,28 @@
+{% extends "base.html" %}{% block body %}
+<span class="eyebrow">Account</span>
+<h1>{% if returning %}Check your account{% else %}You're in{% endif %}</h1>
+{% if returning %}
+<div class="card">
+  <p style="margin:0 0 8px"><b>No credential was displayed.</b></p>
+  <p class="muted" style="margin:0">If this address is already registered, use the licence
+  key you saved at signup or ask the service operator to rotate it. Public signup never
+  reveals an existing account or key.</p>
+</div>
+<p style="margin-top:18px"><a class="btn" href="/">Return to sign in</a></p>
+{% else %}
+<div class="card soft-ok">
+  <p class="muted" style="margin:0 0 10px">This is your licence key. It is your login —
+  keep it somewhere safe. We will not show it again.</p>
+  <p class="mono" style="margin:0;font-size:1.25rem;letter-spacing:.06em;font-weight:600">
+    {{ key.key }}</p>
+</div>
+<p class="muted">Trial: {{ trial_days }} days. Sent to {{ org.email }}.</p>
+<div class="card flat">
+  <h2 class="plain">Next</h2>
+  <p class="muted" style="margin:0 0 6px">1. Go to the app and sign in with that key.</p>
+  <p class="muted" style="margin:0 0 6px">2. Paste a creator link. That is it.</p>
+  <p class="muted" style="margin:0">3. When you are ready, pick a plan on the billing page.</p>
+</div>
+<p style="margin-top:18px"><a class="btn" href="/?key={{ key.key }}">Open the app <span class="btn-arrow">→</span></a></p>
+{% endif %}
+{% endblock %}

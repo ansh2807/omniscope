@@ -1,0 +1,90 @@
+{% extends "base.html" %}{% block title %}Overview · {{ app_name }}{% endblock %}{% block body %}
+<div class="page-head">
+  <span class="eyebrow">Overview</span>
+  <h1>Intelligence workspace</h1>
+  <p class="sub">Every hub is empty until Deep Analyze stores evidence. Nothing here invents a market, a demographic, or a deadline.</p>
+</div>
+
+<div class="grid4" style="margin:24px 0">
+  <div class="stat"><div class="lbl">Entities</div><div class="big">{{ stats.entities }}</div><div class="sm"><a href="/entities">{{ stats.watched }} watched</a></div></div>
+  <div class="stat"><div class="lbl">Web reports</div><div class="big">{{ stats.web_reports }}</div><div class="sm">latest stored payloads</div></div>
+  <div class="stat"><div class="lbl">Alerts</div><div class="big">{{ stats.alerts }}</div><div class="sm"><a href="/alerts">watchlists</a></div></div>
+  <div class="stat"><div class="lbl">Documents</div><div class="big">{{ stats.documents }}</div><div class="sm"><a href="/research">research</a></div></div>
+</div>
+
+<h2>Investigate</h2>
+<div class="bento">
+  <a class="card span-3" href="/"><b>Deep Analyze</b><span class="muted">Drop a URL, company, creator or keyword</span></a>
+  <a class="card span-3" href="/compare"><b>Compare</b><span class="muted">Two stored investigations, no invented winner</span></a>
+  <a class="card span-3" href="/research"><b>Research</b><span class="muted">Resolve an identity or upload a document</span></a>
+  <a class="card span-3" href="/library"><b>Reports</b><span class="muted">Shareable HTML and JSON packs</span></a>
+  <a class="card span-3" href="/discover"><b>Social discover</b><span class="muted">Creator search and shortlists</span></a>
+  <a class="card span-3" href="/entities"><b>Entities</b><span class="muted">Resolved subjects and coverage</span></a>
+</div>
+
+<h2>Market</h2>
+<div class="bento">
+  <a class="card span-3" href="/market"><b>Market</b><span class="muted">Search-led participant maps</span></a>
+  <a class="card span-3" href="/competitors"><b>Competitors</b><span class="muted">Official-site rivals from reports</span></a>
+  <a class="card span-3" href="/products"><b>Products</b><span class="muted">JSON-LD offers and public prices</span></a>
+  <a class="card span-3" href="/desk"><b>Marketing desk</b><span class="muted">Eight basic needs, filled from public evidence</span></a>
+  <a class="card span-3" href="/opportunities"><b>Opportunities</b><span class="muted">Rule-driven gaps from stored reports</span></a>
+  <a class="card span-3" href="/reviews"><b>Reviews</b><span class="muted">On-page Review schema and printed AggregateRating</span></a>
+  <a class="card span-3" href="/awards"><b>Awards</b><span class="muted">Catalog + official-page dates</span></a>
+</div>
+
+<h2>Evidence</h2>
+<div class="bento">
+  <a class="card span-3" href="/coverage"><b>Coverage</b><span class="muted">What we measured on each site</span></a>
+  <a class="card span-3" href="/unmeasured"><b>Unmeasured</b><span class="muted">Declared unavailable rows from reports</span></a>
+  <a class="card span-3" href="/well-known"><b>Well-known</b><span class="muted">security.txt, llms.txt, humans.txt — inventory, not a score</span></a>
+  <a class="card span-3" href="/filings"><b>Filings</b><span class="muted">SEC / GLEIF only when a CIK or LEI already exists</span></a>
+  <a class="card span-3" href="/site"><b>Site signals</b><span class="muted">robots, headers, CSP hosts, document links</span></a>
+  <a class="card span-3" href="/structured"><b>Structured</b><span class="muted">FAQ, jobs, hours, HowTo tools, ContactPoint, catalogs</span></a>
+  <a class="card span-3" href="/surfaces"><b>Surfaces</b><span class="muted">App store, GitHub and status links</span></a>
+  <a class="card span-3" href="/legal"><b>Legal</b><span class="muted">Sampled policy pages and revision dates</span></a>
+  <a class="card span-3" href="/identity"><b>Identity</b><span class="muted">GSTIN, CIN, verification meta, rel=me, sameAs</span></a>
+  <a class="card span-3" href="/onpage"><b>On-page</b><span class="muted">Embeds, forms, chat links, linked PDFs</span></a>
+  <a class="card span-3" href="/locale"><b>Locale</b><span class="muted">html lang, og:locale, hreflang — not a market</span></a>
+  <a class="card span-3" href="/contacts"><b>Contacts</b><span class="muted">Public emails and phones</span></a>
+  <a class="card span-3" href="/socials"><b>Socials</b><span class="muted">Accounts the site itself linked</span></a>
+  <a class="card span-3" href="/tech"><b>Tech</b><span class="muted">Public HTML fingerprints</span></a>
+  <a class="card span-3" href="/seo"><b>SEO coverage</b><span class="muted">Present / thin / missing paths</span></a>
+  <a class="card span-3" href="/feeds"><b>Feeds</b><span class="muted">RSS/Atom the site advertised</span></a>
+  <a class="card span-3" href="/news"><b>News</b><span class="muted">Search hits and fetched article pages</span></a>
+  <a class="card span-3" href="/brand"><b>Brand</b><span class="muted">Public name, score, linked socials</span></a>
+  <a class="card span-3" href="/content"><b>Content</b><span class="muted">Measured hooks from creator reports</span></a>
+  <a class="card span-3" href="/risk"><b>Risk</b><span class="muted">Crisis/criticism labels from news radar</span></a>
+</div>
+
+<h2>Knowledge</h2>
+<div class="bento">
+  <a class="card span-3" href="/graph"><b>Graph</b><span class="muted">Stored entities and evidenced links</span></a>
+  <a class="card span-3" href="/mentions"><b>Mentions</b><span class="muted">Domain overlap across stored reports</span></a>
+  <a class="card span-3" href="/trends"><b>Trend radar</b><span class="muted">SIGNAL classes from snapshots</span></a>
+  <a class="card span-3" href="/timeline"><b>Timeline</b><span class="muted">Stored snapshots, news and feeds</span></a>
+  <a class="card span-3" href="/digest"><b>Digest</b><span class="muted">Period change brief from stored evidence</span></a>
+  <a class="card span-3" href="/alerts"><b>Watch</b><span class="muted">Homepage and advertised-feed sweep</span></a>
+</div>
+
+<h2>Recent web investigations</h2>
+{% if stats.recent %}
+<div class="table-wrap">
+<table>
+<thead><tr><th>Entity</th><th>Score</th><th>When</th><th></th></tr></thead>
+<tbody>
+{% for r, p in stats.recent %}
+<tr>
+  <td><b>{{ p.entity_name or r.subject_name }}</b><div class="muted">{{ p.domain }}</div></td>
+  <td class="mono">{{ p.overall_score }}</td>
+  <td class="muted mono">{{ r.created_at.strftime('%d %b %H:%M') }}</td>
+  <td class="actions"><a href="/r/{{ r.share_slug }}">open</a></td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+{% else %}
+<div class="empty">No website investigations yet. <a href="/">Deep Analyze a domain</a>.</div>
+{% endif %}
+{% endblock %}

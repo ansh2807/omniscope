@@ -1,0 +1,49 @@
+{% extends "base.html" %}{% block title %}Shortlists · {{ app_name }}{% endblock %}{% block body %}
+<div class="page-head">
+  <span class="eyebrow">Shortlists</span>
+  <h1>Campaign shortlists</h1>
+  <p class="sub">Rosters for outreach. Move creators from discovery → diligence → deal stages.</p>
+</div>
+
+<div class="grid2">
+  <div class="card" style="margin:0">
+    <h2 class="plain">New shortlist</h2>
+    <form method="post" action="/shortlists">
+      <label>Name<input type="text" name="name" placeholder="Q3 skincare India seed list" required></label>
+      <label>Brief / objective<textarea name="brief" placeholder="Goal, budget band, must-have audience, exclusions…"></textarea></label>
+      <div style="margin-top:18px"><button type="submit">Create shortlist <span class="btn-arrow">→</span></button></div>
+    </form>
+  </div>
+  <div class="card flat" style="margin:0">
+    <h2 class="plain">Pipeline stages</h2>
+    <div class="pill-row">
+      <span class="badge run">shortlisted</span>
+      <span class="badge warn">outreach</span>
+      <span class="badge warn">negotiating</span>
+      <span class="badge ok">won</span>
+      <span class="badge err">pass</span>
+    </div>
+    <p class="muted" style="margin-top:18px">Add from Library, Discover, or any finished report. Status updates stay on your instance.</p>
+  </div>
+</div>
+
+<h2>Your shortlists</h2>
+{% if lists %}
+<div class="grid2">
+{% for sl in lists %}
+  <div class="card lift" style="margin:0">
+    <div class="row-between" style="align-items:flex-start">
+      <div>
+        <b style="font-size:16.5px;letter-spacing:-.02em">{{ sl.name }}</b>
+        <div class="muted" style="margin-top:6px">{{ sl.item_count }} creators · updated {{ sl.updated_at.strftime('%d %b %Y') }}</div>
+      </div>
+      <a class="btn secondary" href="/shortlists/{{ sl.id }}" style="padding:8px 14px;font-size:12.5px;flex-shrink:0">Open</a>
+    </div>
+    {% if sl.brief %}<p class="muted" style="margin:14px 0 0">{{ sl.brief[:180] }}{% if sl.brief|length > 180 %}…{% endif %}</p>{% endif %}
+  </div>
+{% endfor %}
+</div>
+{% else %}
+<div class="empty">No shortlists yet. Create one, or hit <b>shortlist</b> on any report.</div>
+{% endif %}
+{% endblock %}

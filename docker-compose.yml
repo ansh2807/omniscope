@@ -1,0 +1,35 @@
+services:
+  api:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql+psycopg://ci:${POSTGRES_PASSWORD:-changeme}@db:5432/creatorintel
+      REPORTS_DIR: /srv/data/reports
+      CACHE_DIR: /srv/data/cache
+    volumes:
+      - reports:/srv/data
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:8000:8000"   # bind to loopback; terminate TLS at the reverse proxy
+
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ci
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      POSTGRES_DB: creatorintel
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ci -d creatorintel"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  reports:
+  pgdata:

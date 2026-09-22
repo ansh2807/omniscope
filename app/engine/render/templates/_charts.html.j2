@@ -1,0 +1,105 @@
+<script>
+(function(){
+const T='#8b98a5',G='#232b36',A='#4f9cf9',A2='#a78bfa',A3='#3fb950',A4='#f0883e',
+      BAD='#f85149',WARN='#d29922',DIM='#3d4653';
+Chart.defaults.color=T;Chart.defaults.borderColor=G;Chart.defaults.font.size=11;
+Chart.defaults.font.family="-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,sans-serif";
+const gr={grid:{color:G},ticks:{color:T}},noLeg={plugins:{legend:{display:false}},maintainAspectRatio:false};
+const PALETTE=[A,A2,A3,A4,'#8b98a5','#ff7b72','#79c0ff','#d29922'];
+const ALL={{ chart_data|tojson }};
+const el=id=>document.getElementById(id);
+
+function bar(id,d,color,axis){if(!el(id)||!d||!d.k.length)return;new Chart(el(id),{type:'bar',
+ data:{labels:d.k,datasets:[{data:d.v,backgroundColor:color,borderRadius:4}]},
+ options:{...noLeg,indexAxis:axis||'x',scales:axis==='y'?{x:gr,y:gr}:{y:gr,x:gr}}});}
+function ring(id,d,colors){if(!el(id)||!d||!d.k.length)return;new Chart(el(id),{type:'doughnut',
+ data:{labels:d.k,datasets:[{data:d.v,backgroundColor:colors||PALETTE,borderColor:'#161b22',borderWidth:2}]},
+ options:{maintainAspectRatio:false,cutout:'56%',plugins:{legend:{position:'right',labels:{boxWidth:10,font:{size:10}}}}}});}
+function line(id,d,color,rgba,maxY){if(!el(id)||!d||!d.k.length)return;new Chart(el(id),{type:'line',
+ data:{labels:d.k,datasets:[{data:d.v,borderColor:color,backgroundColor:rgba,tension:.35,fill:true,pointRadius:3}]},
+ options:{...noLeg,scales:{y:{...gr,max:maxY},x:gr}}});}
+function stack(id,d){if(!el(id)||!d||!d.k.length)return;new Chart(el(id),{type:'bar',
+ data:{labels:[''],datasets:d.k.map((k,i)=>({label:k,data:[d.v[i]],backgroundColor:PALETTE[i%PALETTE.length]}))},
+ options:{maintainAspectRatio:false,indexAxis:'y',scales:{x:{stacked:true,...gr,max:100},y:{stacked:true,...gr}},
+ plugins:{legend:{position:'bottom',labels:{boxWidth:10,font:{size:10}}}}}});}
+
+Object.keys(ALL).forEach(function(pre){
+  const D=ALL[pre];
+  bar(pre+'cAge',D.age,A);
+  bar(pre+'cInc',D.income,A2,'y');
+  ring(pre+'cTier',D.tier,[A,A2,A4]);
+  ring(pre+'cDev',D.device,[A3,A,A4,'#8b98a5']);
+  ring(pre+'cFmt',D.format,[A,A2,A3,A4]);
+  bar(pre+'cOcc',D.occupation,A,'y');
+  bar(pre+'cEdu',D.education,A2,'y');
+  bar(pre+'cCar',D.career,A3,'y');
+  stack(pre+'cSoph',D.sophistication);
+  ring(pre+'cCons',D.consumption);
+  if(D.interests)bar(pre+'cInt',D.interests,A3,'y');
+  if(D.top)bar(pre+'cTop',D.top,A4,'y');
+  line(pre+'cSea',D.season,A4,'rgba(240,136,62,.10)',105);
+  if(D.evidence)bar(pre+'cEvidence',D.evidence,A);
+  if(D.gaps)line(pre+'cGaps',D.gaps,A2,'rgba(167,139,250,.10)');
+  if(D.prices)bar(pre+'cPrices',D.prices,A3,'y');
+
+  if(D.lorenz&&D.lorenz.length&&el(pre+'cLorenz'))new Chart(el(pre+'cLorenz'),{type:'line',
+    data:{datasets:[
+      {label:'Observed concentration',data:D.lorenz,borderColor:A,backgroundColor:'rgba(79,156,249,.10)',fill:true,pointRadius:0,tension:.08},
+      {label:'Perfect equality',data:[{x:0,y:0},{x:100,y:100}],borderColor:DIM,borderDash:[5,5],pointRadius:0}]},
+    options:{maintainAspectRatio:false,parsing:false,plugins:{legend:{position:'bottom',labels:{boxWidth:10,font:{size:10}}}},
+      scales:{x:{...gr,type:'linear',min:0,max:100,title:{display:true,text:'Cumulative share of items (%)',color:T}},
+              y:{...gr,min:0,max:100,title:{display:true,text:'Cumulative share of views (%)',color:T}}}}});
+
+  if(D.brand&&el(pre+'cBrand'))new Chart(el(pre+'cBrand'),{type:'radar',
+    data:{labels:D.brand.k,datasets:[{data:D.brand.v,borderColor:A2,backgroundColor:'rgba(167,139,250,.15)',pointBackgroundColor:A2}]},
+    options:{maintainAspectRatio:false,plugins:{legend:{display:false}},
+     scales:{r:{min:0,max:10,grid:{color:G},angleLines:{color:G},pointLabels:{color:T,font:{size:10.5}},ticks:{display:false}}}}});
+
+  if(D.funnel&&el(pre+'cFun'))new Chart(el(pre+'cFun'),{type:'radar',
+    data:{labels:D.funnel.k,datasets:[{data:D.funnel.v,borderColor:A,backgroundColor:'rgba(79,156,249,.14)',pointBackgroundColor:A}]},
+    options:{maintainAspectRatio:false,plugins:{legend:{display:false}},
+     scales:{r:{min:0,max:10,grid:{color:G},angleLines:{color:G},pointLabels:{color:T,font:{size:10.5}},ticks:{display:false}}}}});
+
+  // audience heatmap: age x city tier, bubble radius = estimated concentration
+  if(D.heat&&el(pre+'cHeat'))new Chart(el(pre+'cHeat'),{type:'bubble',
+    data:{datasets:D.heat.rows.map((r,i)=>({label:r.tier,
+      data:r.points.map(pt=>({x:pt.x,y:i,r:pt.r})),
+      backgroundColor:['rgba(79,156,249,.55)','rgba(167,139,250,.55)','rgba(240,136,62,.55)'][i%3]}))},
+    options:{maintainAspectRatio:false,scales:{
+      x:{...gr,type:'category',labels:D.heat.ages},
+      y:{...gr,type:'category',labels:D.heat.tiers,offset:true}},
+      plugins:{legend:{position:'bottom',labels:{boxWidth:10,font:{size:10}}},
+       tooltip:{callbacks:{label:c=>D.heat.tiers[c.parsed.y]+' · '+D.heat.ages[c.parsed.x]+' — index '+Math.round(c.raw.r*c.raw.r/3)}}}}});
+
+  if(D.sentiment&&el(pre+'cSent'))stack(pre+'cSent',D.sentiment);
+  if(D.intent&&el(pre+'cIntent'))bar(pre+'cIntent',D.intent,A2,'y');
+
+  // content matrix: duration vs views
+  if(D.matrix&&el(pre+'cMatrix'))new Chart(el(pre+'cMatrix'),{type:'scatter',
+    data:{datasets:[{label:'Content item',data:D.matrix,backgroundColor:'rgba(79,156,249,.6)',pointRadius:5}]},
+    options:{maintainAspectRatio:false,plugins:{legend:{display:false},
+      tooltip:{callbacks:{label:c=>c.raw.t+' — '+c.raw.y.toLocaleString()+' views, '+c.raw.x+' min'}}},
+     scales:{x:{...gr,title:{display:true,text:'Length (minutes)',color:T}},
+             y:{...gr,type:'logarithmic',title:{display:true,text:'Views (log)',color:T}}}}});
+
+  if(D.platforms&&el(pre+'cPlat'))bar(pre+'cPlat',D.platforms,A,'y');
+
+  if(D.growth&&el(pre+'cGrowth'))new Chart(el(pre+'cGrowth'),{type:'line',
+    data:{labels:D.growth.k,datasets:[{data:D.growth.v,borderColor:A3,backgroundColor:'rgba(63,185,80,.10)',tension:.3,fill:true,pointRadius:3}]},
+    options:{...noLeg,scales:{y:{...gr,type:'logarithmic',title:{display:true,text:'Median views per item (log)',color:T}},x:gr}}});
+
+  if(D.position&&el(pre+'cPos'))new Chart(el(pre+'cPos'),{type:'scatter',
+    data:{datasets:[{label:D.position.name,data:[{x:D.position.x,y:D.position.y}],backgroundColor:A2,pointRadius:14}]},
+    options:{maintainAspectRatio:false,plugins:{legend:{position:'bottom'}},
+     scales:{x:{...gr,min:0,max:10,title:{display:true,text:'Public scale index (log follows)',color:T}},
+             y:{...gr,min:0,max:10,title:{display:true,text:'Commercial infrastructure evidence',color:T}}}}});
+
+  if(D.competitors&&D.competitors.length&&el(pre+'cComp'))new Chart(el(pre+'cComp'),{type:'bubble',
+    data:{datasets:D.competitors.map((c,i)=>({label:c.name,data:[{x:c.x,y:c.y,r:c.r}],
+      backgroundColor:c.self?'rgba(63,185,80,.75)':PALETTE[i%PALETTE.length]+'99'}))},
+    options:{maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{boxWidth:9,font:{size:10}}}},
+     scales:{x:{...gr,type:'logarithmic',title:{display:true,text:'Audience (log)',color:T}},
+             y:{...gr,min:0,max:100,title:{display:true,text:'Topical overlap with subject (%)',color:T}}}}});
+});
+})();
+</script>

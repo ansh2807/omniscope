@@ -1,0 +1,39 @@
+{% extends "base.html" %}{% block title %}Awards · {{ app_name }}{% endblock %}{% block body %}
+<div class="page-head">
+  <span class="eyebrow">Award intelligence</span>
+  <h1>Award calendar</h1>
+  <p class="sub">Typical seasons stay on the catalog. Official dates appear only after we fetch the organizer’s own page and extract printed dates. No date means UNAVAILABLE — not last year’s guess.</p>
+  <form method="post" action="/awards/refresh" style="margin-top:12px">
+    <button type="submit">Refresh official dates</button>
+  </form>
+</div>
+
+<div class="table-wrap">
+<table>
+<thead><tr><th>Award</th><th>Organizer</th><th>Typical season</th><th>Official dates</th><th>Fetch</th></tr></thead>
+<tbody>
+{% for row in catalog %}
+<tr>
+  <td><b>{{ row.award.name }}</b><div class="muted"><a href="{{ row.award.url }}">{{ row.award.url }}</a></div></td>
+  <td class="muted">{{ row.award.org }} · {{ row.award.region }}</td>
+  <td>{{ row.award.season }}</td>
+  <td>
+    {% if row.dates %}
+      {% for d in row.dates %}<div>{{ d }}</div>{% endfor %}
+    {% elif row.reason %}
+      <span class="muted">{{ row.reason }}</span>
+    {% else %}
+      <span class="muted">Not fetched yet</span>
+    {% endif %}
+  </td>
+  <td>
+    {% if row.status %}<span class="badge run">{{ row.status }}</span>{% else %}<span class="muted">—</span>{% endif %}
+    {% if row.fetched_at %}<div class="muted mono">{{ row.fetched_at.strftime('%d %b %H:%M') }}</div>{% endif %}
+  </td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+<p class="muted" style="margin-top:16px">This is a matcher catalog, not a scraped inventory of every award on earth. Refresh walks each official URL through the compliant HTTP layer (robots, throttle, cache).</p>
+{% endblock %}

@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 360" width="1200" height="360" role="img" aria-label="Omniscope — marketing intelligence OS">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#04140f"/>
+      <stop offset="0.5" stop-color="#07231a"/>
+      <stop offset="1" stop-color="#03100c"/>
+    </linearGradient>
+    <linearGradient id="scan" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#10b981" stop-opacity="0"/>
+      <stop offset="1" stop-color="#34d399" stop-opacity="0.7"/>
+    </linearGradient>
+    <radialGradient id="rad" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#34d399" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#34d399" stop-opacity="0"/>
+    </radialGradient>
+    <style>
+      .title{font-family:'Segoe UI',system-ui,sans-serif;font-weight:800;fill:#eafff6;}
+      .sub{font-family:'Segoe UI',system-ui,sans-serif;font-weight:500;fill:#8fdcc0;}
+      .chip{font-family:'Segoe UI',system-ui,sans-serif;font-weight:700;fill:#03100c;}
+      .chip2{font-family:'Segoe UI',system-ui,sans-serif;font-weight:700;fill:#a7f3d0;}
+      .sweep{transform-box:fill-box;transform-origin:0 0;animation:radar 4s linear infinite;}
+      .node{transform-box:fill-box;transform-origin:center;animation:ping 3s ease-in-out infinite;}
+      .n2{animation-delay:.4s}.n3{animation-delay:.9s}.n4{animation-delay:1.4s}.n5{animation-delay:1.9s}.n6{animation-delay:2.3s}
+      .edge{stroke:#0f5c43;stroke-width:1.5;stroke-dasharray:4 6;animation:flow 3s linear infinite;}
+      .ringpulse{animation:rp 3s ease-out infinite;transform-box:fill-box;transform-origin:center;}
+      .titleIn{opacity:0;animation:rise .9s ease-out .2s forwards;}
+      .subIn{opacity:0;animation:rise .9s ease-out .5s forwards;}
+      .chipG{opacity:0;animation:rise .8s ease-out forwards;}
+      .c2{animation-delay:.7s}.c3{animation-delay:.85s}.c4{animation-delay:1s}
+      @keyframes radar{to{transform:rotate(360deg)}}
+      @keyframes ping{0%,100%{transform:scale(.7);opacity:.5}50%{transform:scale(1.15);opacity:1}}
+      @keyframes flow{to{stroke-dashoffset:-20}}
+      @keyframes rp{0%{transform:scale(.5);opacity:.8}100%{transform:scale(1.8);opacity:0}}
+      @keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+      @media (prefers-reduced-motion: reduce){.sweep,.node,.edge,.ringpulse,.titleIn,.subIn,.chipG{animation:none;opacity:1}}
+    </style>
+  </defs>
+
+  <rect width="1200" height="360" fill="url(#bg)"/>
+  <circle cx="215" cy="180" r="170" fill="url(#rad)"/>
+
+  <!-- radar grid -->
+  <g transform="translate(215,180)">
+    <circle r="140" fill="none" stroke="#0f5c43" stroke-width="1.5" opacity="0.6"/>
+    <circle r="95"  fill="none" stroke="#0f5c43" stroke-width="1.5" opacity="0.5"/>
+    <circle r="50"  fill="none" stroke="#0f5c43" stroke-width="1.5" opacity="0.4"/>
+    <circle class="ringpulse" r="50" fill="none" stroke="#34d399" stroke-width="2"/>
+    <line x1="-140" y1="0" x2="140" y2="0" stroke="#0f5c43" stroke-width="1" opacity="0.4"/>
+    <line x1="0" y1="-140" x2="0" y2="140" stroke="#0f5c43" stroke-width="1" opacity="0.4"/>
+
+    <!-- connecting edges -->
+    <line class="edge" x1="0" y1="0" x2="-70" y2="-60"/>
+    <line class="edge" x1="0" y1="0" x2="95" y2="-40"/>
+    <line class="edge" x1="0" y1="0" x2="60" y2="85"/>
+    <line class="edge" x1="0" y1="0" x2="-90" y2="55"/>
+
+    <!-- sweep -->
+    <path class="sweep" d="M0 0 L140 0 A140 140 0 0 1 99 99 Z" fill="url(#scan)"/>
+
+    <!-- nodes -->
+    <circle class="node"    cx="-70" cy="-60" r="7" fill="#34d399"/>
+    <circle class="node n2" cx="95"  cy="-40" r="6" fill="#6ee7b7"/>
+    <circle class="node n3" cx="60"  cy="85"  r="7" fill="#34d399"/>
+    <circle class="node n4" cx="-90" cy="55"  r="6" fill="#6ee7b7"/>
+    <circle class="node n5" cx="30"  cy="-95" r="5" fill="#a7f3d0"/>
+    <circle class="node n6" cx="-30" cy="110" r="5" fill="#a7f3d0"/>
+    <circle cx="0" cy="0" r="9" fill="#eafff6"/>
+  </g>
+
+  <!-- headline -->
+  <g transform="translate(430,116)">
+    <text class="title titleIn" x="0" y="0" font-size="72" letter-spacing="-1">Omniscope</text>
+    <text class="sub subIn" x="2" y="44" font-size="24">Marketing intelligence, on your own infrastructure.</text>
+    <text class="sub subIn" x="2" y="76" font-size="18" opacity="0.9">Drop a creator, a domain or a keyword — get an evidence-backed diligence report.</text>
+
+    <g transform="translate(2,108)">
+      <g class="chipG">   <rect x="0"   y="0" width="150" height="34" rx="17" fill="#34d399"/><text class="chip"  x="75"  y="22" text-anchor="middle" font-size="14">Creator + Web intel</text></g>
+      <g class="chipG c2"><rect x="162" y="0" width="118" height="34" rx="17" fill="none" stroke="#0f5c43" stroke-width="1.5"/><text class="chip2" x="221" y="22" text-anchor="middle" font-size="14">Shows formulas</text></g>
+      <g class="chipG c3"><rect x="292" y="0" width="96"  height="34" rx="17" fill="none" stroke="#0f5c43" stroke-width="1.5"/><text class="chip2" x="340" y="22" text-anchor="middle" font-size="14">FastAPI</text></g>
+      <g class="chipG c4"><rect x="400" y="0" width="120" height="34" rx="17" fill="none" stroke="#0f5c43" stroke-width="1.5"/><text class="chip2" x="460" y="22" text-anchor="middle" font-size="14">Self-hosted</text></g>
+    </g>
+  </g>
+</svg>

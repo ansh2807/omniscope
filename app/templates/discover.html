@@ -1,0 +1,71 @@
+{% extends "base.html" %}{% block title %}Discover · {{ app_name }}{% endblock %}{% block body %}
+<div class="page-head">
+  <span class="eyebrow">Discover</span>
+  <h1>Find creators before you buy</h1>
+  <p class="sub">Niche search across public profiles. Find candidates, then run full diligence in one click.</p>
+</div>
+
+<div class="card hero">
+  <form method="get" action="/discover" class="row">
+    <input type="search" name="q" value="{{ q }}" placeholder="e.g. CUET commerce educator, skincare India, SaaS founder podcast" required minlength="2">
+    <select name="platform" style="max-width:180px">
+      <option value="any" {{ 'selected' if platform=='any' else '' }}>All platforms</option>
+      <option value="instagram" {{ 'selected' if platform=='instagram' else '' }}>Instagram</option>
+      <option value="youtube" {{ 'selected' if platform=='youtube' else '' }}>YouTube</option>
+      <option value="tiktok" {{ 'selected' if platform=='tiktok' else '' }}>TikTok</option>
+      <option value="linkedin" {{ 'selected' if platform=='linkedin' else '' }}>LinkedIn</option>
+      <option value="x" {{ 'selected' if platform=='x' else '' }}>X / Twitter</option>
+    </select>
+    <button type="submit">Search <span class="btn-arrow">→</span></button>
+  </form>
+  <p class="muted" style="margin:14px 0 0">Uses your licensed search key. Results are public profile candidates — always verify identity in the report.</p>
+</div>
+
+{% if result %}
+  {% if not result.assessed or result.reason %}
+  <div class="card soft-warn"><p class="muted flash">{{ result.reason }}</p></div>
+  {% endif %}
+  {% if result.candidates %}
+  <h2>{{ result.candidates|length }} candidates · {{ result.queries_run }} search queries</h2>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Creator</th><th>Platform</th><th>Signal score</th><th>Evidence</th><th></th></tr></thead>
+    <tbody>
+    {% for c in result.candidates %}
+    <tr>
+      <td><b>{{ c.title or c.handle }}</b><div class="muted mono">@{{ c.handle }}</div>
+        {% if c.snippet %}<div class="muted" style="margin-top:4px;max-width:420px">{{ c.snippet[:160] }}{% if c.snippet|length > 160 %}…{% endif %}</div>{% endif %}
+      </td>
+      <td><span class="badge run">{{ c.platform }}</span></td>
+      <td class="mono"><b>{{ c.score }}</b></td>
+      <td class="muted">{{ c.sources|join(', ') if c.sources else 'search' }}</td>
+      <td class="actions">
+        <form method="post" action="/generate">
+          <input type="hidden" name="url" value="{{ c.url }}">
+          <input type="hidden" name="with_competitors" value="1">
+          <button type="submit">Run diligence</button>
+        </form>
+        <form method="post" action="/shortlists/quick-add" style="margin-left:6px">
+          <input type="hidden" name="url" value="{{ c.url }}">
+          <input type="hidden" name="handle" value="{{ c.handle }}">
+          <input type="hidden" name="platform" value="{{ c.platform }}">
+          <input type="hidden" name="display_name" value="{{ c.title or c.handle }}">
+          <button type="submit" class="secondary">Shortlist</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% elif result.assessed %}
+  <div class="empty">No clean creator profiles for “{{ q }}”. Try another niche keyword.</div>
+  {% endif %}
+{% else %}
+<div class="grid3">
+  <div class="feature"><b>Education</b><span>Try “CUET commerce” or “JEE physics teacher”</span></div>
+  <div class="feature"><b>Finance</b><span>Try “personal finance India YouTube”</span></div>
+  <div class="feature"><b>Lifestyle</b><span>Try “clean beauty creator Instagram”</span></div>
+</div>
+{% endif %}
+{% endblock %}

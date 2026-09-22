@@ -1,0 +1,18 @@
+{% extends "base.html" %}{% block body %}
+<h1>Admin</h1>
+{% if not configured %}
+<div class="card" style="border-left:3px solid var(--bad)">
+  <p style="margin:0">The admin panel is disabled because <code>ADMIN_TOKEN</code> is not
+  set. Add it to <code>.env</code> and restart. Generate one with:</p>
+  <p class="muted" style="margin:8px 0 0"><code>python -c "import secrets;print(secrets.token_urlsafe(32))"</code></p>
+</div>
+{% else %}
+<div class="card">
+  <form method="post" action="/admin/login">
+    <label>Admin token<input type="password" name="token" required autofocus></label>
+    <div style="margin-top:14px"><button type="submit">Sign in</button></div>
+  </form>
+  <p class="muted" style="margin-top:12px">This is separate from customer licence keys.</p>
+</div>
+{% endif %}
+{% endblock %}

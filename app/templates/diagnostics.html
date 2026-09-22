@@ -1,0 +1,49 @@
+{% extends "base.html" %}{% block title %}Diagnostics · {{ app_name }}{% endblock %}{% block body %}
+<p class="back"><a href="/">← Workspace</a></p>
+<div class="page-head">
+  <h1>Diagnostics</h1>
+  <p class="sub">Every check below hit a real public page just now. This is what is actually working on this machine.</p>
+</div>
+
+<div class="card {{ 'soft-ok' if rep.quality == 'full' else 'soft-bad' if rep.quality in ('blocked','degraded') else 'soft-warn' }}">
+  <p class="flash" style="font-size:15px"><b>{{ rep.verdict }}</b></p>
+</div>
+
+{% for c in rep.checks %}
+<div class="card flat">
+  <p style="margin:0 0 6px">
+    <span class="badge {{ 'ok' if c.ok else ('err' if c.critical else 'warn') }}">{{ 'pass' if c.ok else ('FAIL' if c.critical else 'off') }}</span>
+    <b>{{ c.name }}</b>
+    {% if c.ms %}<span class="muted mono"> · {{ c.ms }} ms</span>{% endif %}
+  </p>
+  <p class="muted" style="margin:0">{{ c.detail }}</p>
+  {% if c.fix %}<p class="muted" style="margin:8px 0 0"><b style="color:var(--txt)">Fix:</b> {{ c.fix }}</p>{% endif %}
+</div>
+{% endfor %}
+
+{% if providers %}
+<h2>Provider registry</h2>
+<p class="sub">Every data source this instance can draw on. Status is live configuration, not a promise of coverage.</p>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Provider</th><th>Category</th><th>Status</th><th>Capabilities</th><th>Notes</th></tr></thead>
+<tbody>
+{% for p in providers %}
+<tr>
+  <td><b>{{ p.name }}</b></td>
+  <td class="muted">{{ p.category }}</td>
+  <td><span class="badge {{ 'ok' if p.status in ('active','keyless') else 'warn' }}">{{ p.status }}</span></td>
+  <td class="muted">{{ p.capabilities|join(', ') }}</td>
+  <td class="muted">{{ p.notes }}</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+{% endif %}
+
+<div class="row" style="margin-top:24px">
+  <a class="btn secondary" href="/diagnostics">Run again</a>
+  <a class="btn secondary" href="/settings">Settings</a>
+</div>
+{% endblock %}

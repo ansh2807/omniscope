@@ -1,0 +1,54 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Media intelligence — {{ m.title or m.url }}</title>
+{% include "_style.html.j2" %}
+</head><body>
+<a class="skip" href="#main">Skip to report</a>
+<main id="main" class="wrap">
+<div class="cover">
+  <div class="kick">Media Intelligence · OMNISCOPE</div>
+  <h1>{{ m.title or 'Untitled public page' }}</h1>
+  <div class="handle">{{ m.platform }} · {{ m.url }}</div>
+  <div class="meta">Generated {{ m.generated_at.strftime('%d %B %Y, %H:%M UTC') }} ·
+    media engine v{{ m.engine_version }} · method {{ m.method }}</div>
+</div>
+
+{% for warning in m.warnings %}
+<div class="call risk"><b>Caveat</b><p>{{ warning }}</p></div>
+{% endfor %}
+
+{% if not m.assessed %}
+<div class="call risk"><b>Insufficient evidence</b><p>{{ m.reason }}</p></div>
+{% endif %}
+
+<section>
+<h2>1 · Public metadata</h2>
+<table><tbody>
+<tr><th>Platform</th><td>{{ m.platform }}</td></tr>
+<tr><th>Title</th><td>{{ m.title or '—' }}</td></tr>
+{% if m.author %}<tr><th>Author</th><td>{{ m.author }}{% if m.author_url %} · {{ m.author_url }}{% endif %}</td></tr>{% endif %}
+{% if m.published %}<tr><th>Published</th><td>{{ m.published }}</td></tr>{% endif %}
+{% if m.duration %}<tr><th>Duration</th><td>{{ m.duration }}</td></tr>{% endif %}
+<tr><th>Views</th><td>{% if m.view_count is not none %}{{ m.view_count }} <span class="chip obs">json-ld</span>{% else %}unavailable <span class="chip una">not in structured data</span>{% endif %}</td></tr>
+{% if m.upvote_count is not none %}<tr><th>{{ 'Likes' if m.platform == 'bluesky' else 'Listing score' }}</th><td>{{ m.upvote_count }} <span class="chip obs">{{ m.method }}</span></td></tr>{% endif %}
+{% if m.comment_count is not none %}<tr><th>Comments</th><td>{{ m.comment_count }} <span class="chip obs">reddit json</span></td></tr>{% endif %}
+{% if m.community %}<tr><th>Community</th><td>r/{{ m.community }}</td></tr>{% endif %}
+<tr><th>Structured types</th><td>{{ m.jsonld_types|join(', ') or 'none' }}</td></tr>
+</tbody></table>
+{% if m.description %}<p>{{ m.description }}</p>{% endif %}
+<p class="src">Only what the public page (and YouTube oEmbed, when it answers) published.</p>
+</section>
+
+<section>
+<h2>2 · Not measured</h2>
+<table><thead><tr><th>Item</th><th>Why</th></tr></thead><tbody>
+{% for u in m.unavailable %}
+<tr><td>{{ u.item }}</td><td class="src">{{ u.why }}</td></tr>
+{% endfor %}
+</tbody></table>
+</section>
+
+<footer>{{ m.url }} · media engine v{{ m.engine_version }}</footer>
+</main>
+</body></html>

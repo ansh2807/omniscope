@@ -1,0 +1,44 @@
+{% extends "base.html" %}{% block title %}{{ sl.name }} · Shortlists{% endblock %}{% block body %}
+<p class="back"><a href="/shortlists">← Shortlists</a></p>
+<div class="page-head">
+  <h1>{{ sl.name }}</h1>
+  {% if sl.brief %}<p class="sub">{{ sl.brief }}</p>{% endif %}
+</div>
+
+{% if items %}
+<div class="table-wrap">
+<table>
+<thead><tr><th>Creator</th><th>Platform</th><th>Fit</th><th>Status</th><th>Note</th><th></th></tr></thead>
+<tbody>
+{% for it in items %}
+<tr>
+  <td><b>{{ it.display_name or it.handle }}</b><div class="muted mono">@{{ it.handle }}</div>
+    {% if it.url %}<div class="muted" style="margin-top:4px"><a href="{{ it.url }}" target="_blank" rel="noopener">profile</a>
+      {% if it.report_id %} · <a href="/r/{{ it.report_slug }}">report</a>{% endif %}</div>{% endif %}
+  </td>
+  <td><span class="badge run">{{ it.platform or '—' }}</span></td>
+  <td class="mono">{% if it.fit_score is not none %}<b>{{ it.fit_score }}</b>{% else %}—{% endif %}</td>
+  <td>
+    <form method="post" action="/shortlists/{{ sl.id }}/items/{{ it.id }}/status" style="margin:0">
+      <select name="status" style="min-width:130px" onchange="this.form.submit()">
+        {% for st in ['shortlisted','outreach','negotiating','won','pass'] %}
+        <option value="{{ st }}" {{ 'selected' if it.status==st else '' }}>{{ st }}</option>
+        {% endfor %}
+      </select>
+    </form>
+  </td>
+  <td class="muted">{{ it.note or '—' }}</td>
+  <td>
+    <form method="post" action="/shortlists/{{ sl.id }}/items/{{ it.id }}/delete" onsubmit="return confirm('Remove?')">
+      <button type="submit" class="ghost">remove</button>
+    </form>
+  </td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+{% else %}
+<div class="empty">Empty shortlist. Add creators from <a href="/discover">Discover</a> or <a href="/library">Library</a>.</div>
+{% endif %}
+{% endblock %}

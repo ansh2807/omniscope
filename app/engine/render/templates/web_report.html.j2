@@ -1,0 +1,1040 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<meta property="og:title" content="Website Intelligence — {{ w.entity_name }}">
+<meta property="og:description" content="{{ w.tagline|e }}">
+<meta property="og:type" content="article">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%233dd68c'/%3E%3Ctext x='16' y='22' font-family='sans-serif' font-size='14' font-weight='800' fill='%2304140c' text-anchor='middle'%3EOS%3C/text%3E%3C/svg%3E">
+<title>Website Intelligence — {{ w.entity_name }}</title>
+{% include "_style.html.j2" %}
+</head><body>
+<a class="skip" href="#main">Skip to report</a>
+<nav><div class="nv">
+<a href="#desk">0 Desk</a><a href="#score">1 Score</a><a href="#entity">2 Entity</a><a href="#tech">3 Technology</a>
+<a href="#seo">4 SEO &amp; structure</a><a href="#social">5 Social presence</a>
+<a href="#products">6 Product</a><a href="#reviews">7 Reviews</a>
+<a href="#awards">8 Awards</a>
+<a href="#competitors">9 Competitors</a><a href="#market">10 Market</a>
+<a href="#seomap">11 SEO map</a><a href="#news">12 News</a><a href="#risk">Risk</a>
+<a href="#oracle">13 Outlook</a>
+<a href="#reason">14 Critique</a>
+<a href="#opps">15 Opportunities</a><a href="#unmeasured">16 Not measured</a>
+<a href="#evidence">17 Evidence</a>
+</div></nav>
+<main id="main" class="wrap">
+<div class="cover">
+  <div class="kick">Website Intelligence Report · OMNISCOPE</div>
+  <h1>{{ w.entity_name }}</h1>
+  <div class="handle">{{ w.domain }}</div>
+  {% if w.tagline %}<div class="one">{{ w.tagline }}</div>{% endif %}
+  <div class="meta">Generated {{ w.generated_at.strftime('%d %B %Y, %H:%M UTC') }} ·
+    web engine v{{ w.engine_version }} ·
+    {{ w.pages|length }} pages sampled ·
+    intelligence score <b style="color:var(--txt)">{{ w.overall_score }}</b>/100</div>
+  {% if w.usage %}
+  <div class="meta">This run: {{ w.usage.get('pages_sampled', w.pages|length) }} pages ·
+    {{ w.usage.get('search_calls', 0) }} search call(s) ·
+    {{ w.usage.get('robots_blocked', 0) }} robots-blocked ·
+    {{ w.usage.get('http_failed', 0) }} failed fetch(es).
+    Observed work only — not spend.</div>
+  {% endif %}
+</div>
+
+{% for warning in w.warnings %}
+<div class="call risk"><b>Caveat</b><p>{{ warning }}</p></div>
+{% endfor %}
+
+{% if w.desk %}
+<section id="desk">
+<h2>0 · Marketing desk</h2>
+<p class="lede">{{ w.desk.one_liner }}</p>
+<p class="note">{{ w.desk.methodology }}</p>
+<div class="grid">
+  <div class="card"><div class="lbl">This week's job</div><p>{{ w.desk.job }}</p></div>
+  <div class="card"><div class="lbl">Posture</div><p>{{ w.desk.posture }}</p>
+    <div class="sm"><span class="chip est">modelled from public fields</span></div></div>
+</div>
+{% if w.desk.narrative %}
+<p class="lede">{{ w.desk.narrative }}</p>
+<p class="note">Optional prose restated from the filled cells above. Numbers not already on this desk were rejected.</p>
+{% endif %}
+<h3>Eight basic marketing needs</h3>
+<div class="grid">
+{% for n in w.desk.needs %}
+<div class="card">
+  <div class="lbl">{{ n.title }}
+    <span class="chip {{ 'obs' if n.status in ('observed','calculated') else ('una' if n.status=='unavailable' else 'est') }}">{{ n.status }}</span>
+  </div>
+  <p>{{ n.meaning }}</p>
+  <p class="note">{{ n.evidence }}</p>
+  <p><b>Next</b> {{ n.next_step }}</p>
+</div>
+{% endfor %}
+</div>
+{% if w.desk.frameworks %}
+<h3>Frameworks filled from this site</h3>
+{% for fw in w.desk.frameworks %}
+<h4>{{ fw.name }}</h4>
+<table>
+<thead><tr><th>Slot</th><th>Fill</th><th></th></tr></thead>
+<tbody>
+{% for c in fw.cells %}
+<tr>
+  <td><b>{{ c.slot }}</b></td>
+  <td>{{ c.fill }}{% if c.note %}<div class="note">{{ c.note }}</div>{% endif %}</td>
+  <td><span class="chip {{ 'obs' if c.status in ('observed','calculated') else ('una' if c.status=='unavailable' else 'est') }}">{{ c.status }}</span></td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+{% endfor %}
+{% endif %}
+{% if w.desk.playbooks %}
+<h3>Playbooks from observed surfaces</h3>
+<p class="note">A playbook appears only when a public file or path triggered it. It is a template, not a forecast.</p>
+{% for pb in w.desk.playbooks %}
+<div class="card">
+  <div class="lbl">{{ pb.title }}
+    <span class="chip {{ 'obs' if pb.status in ('observed','calculated') else ('una' if pb.status=='unavailable' else 'est') }}">{{ pb.status }}</span>
+  </div>
+  <p>{{ pb.why }}</p>
+  <ul>{% for step in pb.steps %}<li>{{ step }}</li>{% endfor %}</ul>
+  {% if pb.cannot %}<p class="note">{{ pb.cannot }}</p>{% endif %}
+</div>
+{% endfor %}
+{% endif %}
+{% if w.desk.week_plan %}
+<h3>This week</h3>
+<ul>{% for step in w.desk.week_plan %}<li>{{ step }}</li>{% endfor %}</ul>
+{% endif %}
+{% if w.desk.cannot_know %}
+<p class="note"><b>Will not be invented:</b> {{ w.desk.cannot_know|join(' · ') }}</p>
+{% endif %}
+{% if w.desk.glossary %}
+<h3>How to read the chips</h3>
+<table>
+<thead><tr><th>Term</th><th>Meaning</th></tr></thead>
+<tbody>
+{% for g in w.desk.glossary %}
+<tr><td><b>{{ g.term }}</b></td><td>{{ g.meaning }}</td></tr>
+{% endfor %}
+</tbody>
+</table>
+{% endif %}
+</section>
+{% endif %}
+
+<section id="score">
+<h2>1 · Website intelligence score</h2>
+<p>Every dimension below is computed only from what the site publicly serves; each card
+prints its formula and inputs. What could not be measured is listed in
+<a href="#unmeasured">Not measured</a> — it is never blended into a score.</p>
+<div class="grid">
+  <div class="card"><div class="lbl">Overall</div><div class="big">{{ w.overall_score }}</div>
+    <div class="sm">mean of the six dimensions × 10 <span class="chip">calculated</span></div></div>
+  {% for s in w.scores %}
+  <div class="card">
+    <div class="lbl">{{ s.label }}</div>
+    <div class="big">{{ s.score }}<span style="font-size:.5em">/10</span></div>
+    <div class="bar"><i style="width:{{ (s.score * 10)|round|int }}%"></i></div>
+    <div class="formula">{{ s.formula }}</div>
+  </div>
+  {% endfor %}
+</div>
+</section>
+
+<section id="entity">
+<h2>2 · Entity overview</h2>
+<table><tbody>
+<tr><th>Entity</th><td>{{ w.entity_name }} <span class="chip obs">observed</span></td></tr>
+<tr><th>Domain</th><td>{{ w.domain }}</td></tr>
+<tr><th>Seed</th><td>{{ w.seed_url }}</td></tr>
+{% if w.tagline %}<tr><th>Self-description</th><td>{{ w.tagline }}</td></tr>{% endif %}
+{% if w.contacts.emails %}<tr><th>Public emails</th><td>{{ w.contacts.emails|join(', ') }}</td></tr>{% endif %}
+{% if w.contacts.phones %}<tr><th>Public phones</th><td>{{ w.contacts.phones|join(', ') }}</td></tr>{% endif %}
+<tr><th>Structured data</th><td>
+  {% if w.seo.structured_data_types %}{{ w.seo.structured_data_types|join(', ') }}
+  {% else %}none published{% endif %}</td></tr>
+<tr><th>Latest dated content</th><td>{{ w.content.latest_dated_content or 'no dated content found in sample' }}</td></tr>
+{% if w.content_dna and w.content_dna.assessed %}
+<tr><th>Content DNA · hooks</th><td>{{ w.content_dna.hooks|join(' · ') or '—' }}</td></tr>
+<tr><th>Content DNA · CTAs</th><td>{{ w.content_dna.ctas|join(', ') or 'none printed on sampled pages' }}</td></tr>
+{% endif %}
+</tbody></table>
+<p class="src">Pages sampled:
+{% for p in w.pages %}{{ p.url }}{{ " · " if not loop.last }}{% endfor %}</p>
+</section>
+
+<section id="tech">
+<h2>3 · Technology (publicly observable)</h2>
+{% if w.tech %}
+<table><thead><tr><th>Category</th><th>Technology</th><th>Evidence</th></tr></thead><tbody>
+{% for t in w.tech %}
+<tr><td>{{ t.category }}</td><td>{{ t.name }}</td><td class="src">{{ t.evidence }}</td></tr>
+{% endfor %}
+</tbody></table>
+{% else %}
+<p>No known technology fingerprints matched on the sampled pages. This detects only
+what pages serve to every visitor — server-side stacks are invisible by design.</p>
+{% endif %}
+</section>
+
+<section id="seo">
+<h2>4 · SEO &amp; structure</h2>
+<div class="grid">
+  <div class="card"><div class="lbl">robots.txt</div>
+    <div class="big">{{ 'yes' if w.seo.robots_txt else 'no' }}</div></div>
+  <div class="card"><div class="lbl">sitemap.xml</div>
+    <div class="big">{{ 'yes' if w.seo.sitemap_xml else 'no' }}</div>
+    {% if w.seo.sitemap_xml %}<div class="sm">{{ w.seo.sitemap_url_count }} URLs listed</div>{% endif %}</div>
+  <div class="card"><div class="lbl">Words sampled</div>
+    <div class="big">{{ '{:,}'.format(w.content.total_words) }}</div>
+    <div class="sm">across {{ w.content.pages_sampled }} pages</div></div>
+</div>
+<div class="tw"><table><thead>
+<tr><th>Page</th><th>Title</th><th>Meta description</th><th>H1</th><th>Words</th><th>Schema</th></tr>
+</thead><tbody>
+{% for p in w.pages %}
+<tr>
+  <td class="src">{{ p.url|replace('https://','')|replace('http://','')|truncate(48) }}</td>
+  <td>{{ p.title|truncate(60) if p.title else '—' }}</td>
+  <td>{{ '✓' if p.meta_description else '—' }}</td>
+  <td>{{ '✓' if p.h1 else '—' }}</td>
+  <td>{{ '{:,}'.format(p.word_count) }}</td>
+  <td>{{ p.jsonld_types|join(', ')|truncate(40) if p.jsonld_types else '—' }}</td>
+</tr>
+{% endfor %}
+</tbody></table></div>
+<p class="src">Rankings, search demand, traffic and backlinks are not measured here —
+they need a search/keyword provider and are listed under Not measured.</p>
+</section>
+
+<section id="social">
+<h2>5 · Social presence</h2>
+{% if w.socials %}
+<table><thead><tr><th>Platform</th><th>Account</th><th>Followers</th><th>Status</th></tr></thead><tbody>
+{% for s in w.socials %}
+<tr>
+  <td>{{ s.platform }}</td>
+  <td>{{ s.display_name or s.handle or s.url|truncate(50) }}</td>
+  <td>{% if s.followers %}{{ '{:,}'.format(s.followers) }} <span class="chip obs">observed</span>
+      {% else %}<span class="chip una">unavailable</span>{% endif %}</td>
+  <td class="src">{{ s.error or ('verified' if s.verified else 'linked from website, collected live') }}</td>
+</tr>
+{% endfor %}
+</tbody></table>
+<p class="src">Accounts were discovered from the site's own links and sameAs metadata,
+then collected live by the platform collectors. For a full creator-grade analysis of
+any account, run it as its own investigation.</p>
+{% else %}
+<p>No social account could be discovered from the website's own links or structured
+metadata. <span class="chip una">unavailable</span></p>
+{% endif %}
+</section>
+
+<section id="products">
+<h2>6 · Product intelligence</h2>
+{% set pi = w.product_intel %}
+{% if pi and pi.assessed %}
+<div class="grid">
+  <div class="card"><div class="lbl">Pricing model</div><div class="big" style="font-size:1.4rem">{{ pi.pricing_model }}</div></div>
+  <div class="card"><div class="lbl">Public offers</div><div class="big">{{ pi.offer_count }}</div></div>
+  <div class="card"><div class="lbl">INR ladder</div>
+    <div class="big" style="font-size:1.15rem">{% if pi.price_floor is not none %}₹{{ '{:,.0f}'.format(pi.price_floor) }}–₹{{ '{:,.0f}'.format(pi.price_ceiling) }}{% else %}—{% endif %}</div></div>
+</div>
+{% if pi.positioning %}<p>{{ pi.positioning }}</p>{% endif %}
+{% if pi.ladder %}
+<table><thead><tr><th>Offer</th><th>Kind</th><th>Price (INR)</th><th>Availability</th><th>Valid until</th></tr></thead><tbody>
+{% for pr in pi.ladder %}
+<tr><td>{{ pr.name }}</td><td>{{ pr.kind }}</td>
+<td>{% if pr.price_inr %}₹{{ '{:,.0f}'.format(pr.price_inr) }}{% else %}—{% endif %}</td>
+<td class="src">{{ pr.availability or '—' }}</td>
+<td class="src">{{ pr.valid_until or '—' }}</td></tr>
+{% endfor %}
+</tbody></table>
+{% endif %}
+{% if pi.visible_prices %}
+<p><b>Visible ₹ lines</b> near commercial words. These are not SKUs:</p>
+<table><thead><tr><th>Amount</th><th>Excerpt</th></tr></thead><tbody>
+{% for vp in pi.visible_prices %}
+<tr><td>₹{{ '{:,.0f}'.format(vp.amount) }}</td><td class="src">{{ vp.excerpt|truncate(120) }}</td></tr>
+{% endfor %}
+</tbody></table>
+{% endif %}
+{% if pi.catalog %}
+<p><b>Printed catalog identifiers</b> from Product schema. Visible ₹ lines are not SKUs:</p>
+<table><thead><tr><th>Kind</th><th>Offer</th><th>Value</th></tr></thead><tbody>
+{% for idn in pi.catalog %}
+<tr><td>{{ idn.kind }}</td><td>{{ idn.name or '—' }}</td><td class="src">{{ idn.value }}</td></tr>
+{% endfor %}
+</tbody></table>
+{% endif %}
+{% if pi.policies %}
+<p><b>Printed return / shipping terms</b> from Offer schema. Not a delivery-time model:</p>
+<table><thead><tr><th>Kind</th><th>Offer</th><th>Printed fields</th></tr></thead><tbody>
+{% for pol in pi.policies %}
+<tr><td>{{ pol.kind }}</td><td>{{ pol.name or '—' }}</td><td class="src">{{ pol.detail }}</td></tr>
+{% endfor %}
+</tbody></table>
+{% endif %}
+{% if pi.gaps %}
+{% for g in pi.gaps %}<div class="call"><b>Gap</b><p>{{ g }}</p></div>{% endfor %}
+{% endif %}
+<p class="src">{{ pi.methodology }}</p>
+{% elif pi %}
+<p>{{ pi.reason_not_assessed }} <span class="chip una">unavailable</span></p>
+<p class="src">{{ pi.methodology }}</p>
+{% else %}
+<p>Product intelligence was not run on this report.</p>
+{% endif %}
+</section>
+
+<section id="reviews">
+<h2>7 · Reviews</h2>
+{% set ri = w.review_intel %}
+{% if ri and ri.assessed %}
+{% if ri.ratings %}
+<p><b>Printed AggregateRating</b> — schema stars, not a verified review volume:</p>
+<table><thead><tr><th>Name</th><th>Value</th><th>Count</th><th>Via</th></tr></thead><tbody>
+{% for c in ri.ratings %}
+<tr><td>{{ c.name or '—' }}</td>
+<td class="mono">{{ c.value or '—' }}{% if c.best %} / {{ c.best }}{% endif %}</td>
+<td class="src">{{ c.count or '—' }}</td>
+<td class="src">{{ c.via or '—' }}</td></tr>
+{% endfor %}
+</tbody></table>
+{% elif ri.aggregate_rating is not none %}
+<p>Published aggregate rating <b>{{ ri.aggregate_rating }}</b>
+{% if ri.aggregate_count %} across {{ ri.aggregate_count }} ratings{% endif %}
+<span class="chip obs">observed</span></p>
+{% endif %}
+{% if ri.themes %}
+<p class="src">{% for k, v in ri.themes.items() %}{{ k }} {{ v }}{% if not loop.last %} · {% endif %}{% endfor %}</p>
+{% endif %}
+{% if ri.items %}
+<table><thead><tr><th>Theme</th><th>Review</th><th>Rating</th></tr></thead><tbody>
+{% for it in ri.items %}
+<tr>
+  <td class="src">{{ it.themes|join(', ') or '—' }}</td>
+  <td>{{ it.body|truncate(180) }}</td>
+  <td class="mono">{{ it.rating if it.rating is not none else '—' }}</td>
+</tr>
+{% endfor %}
+</tbody></table>
+{% elif ri.reason %}<p class="src">{{ ri.reason }}</p>{% endif %}
+<p class="src">{{ ri.methodology }}</p>
+{% elif ri %}
+<p>{{ ri.reason }} <span class="chip una">unavailable</span></p>
+{% else %}
+<p>Review intelligence was not run. <span class="chip una">unavailable</span></p>
+{% endif %}
+</section>
+
+<section id="awards">
+<h2>8 · Award intelligence</h2>
+{% set ai = w.award_intel %}
+{% if ai and ai.mentions %}
+<table><thead><tr><th>Award</th><th>Status</th><th>Evidence</th></tr></thead><tbody>
+{% for m in ai.mentions %}
+<tr>
+  <td>{{ m.award }}</td>
+  <td><span class="chip {{ 'est' if m.status == 'self_claimed' else 'obs' }}">{{ m.status }}</span></td>
+  <td class="src">{{ m.excerpt }} · {{ m.source_url|truncate(48) }}</td>
+</tr>
+{% endfor %}
+</tbody></table>
+{% elif ai and ai.reason %}
+<p>{{ ai.reason }} <span class="chip una">unavailable</span></p>
+{% endif %}
+{% if ai and ai.generic_claims %}
+<p class="src">Generic award language on-site:
+{% for g in ai.generic_claims %}“{{ g }}”{% if not loop.last %}; {% endif %}{% endfor %}</p>
+{% endif %}
+{% if ai and ai.calendar %}
+<h3 style="font-size:1rem;margin:22px 0 10px">Known award calendar (typical season)</h3>
+<table><thead><tr><th>Award</th><th>Season</th><th>Region</th><th>On this site</th></tr></thead><tbody>
+{% for c in ai.calendar %}
+<tr>
+  <td>{{ c.name }}</td>
+  <td>{{ c.season }}</td>
+  <td>{{ c.region }}</td>
+  <td>{% if c.mentioned_on_site %}<span class="chip obs">mentioned</span>{% else %}—{% endif %}</td>
+</tr>
+{% endfor %}
+</tbody></table>
+{% endif %}
+{% if ai %}<p class="src">{{ ai.methodology }}</p>{% endif %}
+</section>
+
+<section id="competitors">
+<h2>9 · Competitors</h2>
+{% set ci = w.competitor_intel %}
+{% if ci and ci.assessed and ci.competitors %}
+<p>Official websites that ranked for <b>{{ ci.query_used }}</b>. Shared customers and
+market share were not measured.</p>
+<table><thead><tr><th>Entity</th><th>Domain</th><th>Why it surfaced</th></tr></thead><tbody>
+{% for c in ci.competitors %}
+<tr>
+  <td>{{ c.name }}</td>
+  <td class="src">{{ c.domain }}</td>
+  <td class="src">{{ c.snippet or c.found_via }}</td>
+</tr>
+{% endfor %}
+</tbody></table>
+<p class="src">{{ ci.methodology }}</p>
+{% elif ci %}
+<p>{{ ci.reason }} <span class="chip una">unavailable</span></p>
+<p class="src">{{ ci.methodology }}</p>
+{% else %}
+<p>Competitor discovery was not run on this report. <span class="chip una">unavailable</span></p>
+{% endif %}
+</section>
+
+<section id="market">
+<h2>10 · Market map</h2>
+{% set mi = w.market_intel %}
+{% if mi and mi.assessed and mi.participants %}
+<p>Official websites that ranked for <b>{{ mi.query_used }}</b>. Not a census and not market share.</p>
+<table><thead><tr><th>Participant</th><th>Domain</th><th>Snippet</th></tr></thead><tbody>
+{% for p in mi.participants %}
+<tr><td>{{ p.name }}</td><td class="src">{{ p.domain }}</td><td class="src">{{ p.snippet|truncate(140) }}</td></tr>
+{% endfor %}
+</tbody></table>
+<p class="src">{{ mi.methodology }}</p>
+{% elif mi %}
+<p>{{ mi.reason }} <span class="chip una">unavailable</span></p>
+{% else %}
+<p>Market map was not run. <span class="chip una">unavailable</span></p>
+{% endif %}
+</section>
+
+<section id="seomap">
+<h2>11 · SEO coverage map</h2>
+{% set sm = w.seo_map %}
+{% if sm and sm.slots %}
+<p>Expected commercial paths vs this crawl. This is <b>not</b> a demand × competition keyword map.</p>
+<table><thead><tr><th>Slot</th><th>Status</th><th>Evidence</th></tr></thead><tbody>
+{% for s in sm.slots %}
+<tr>
+  <td>{{ s.slot }} <span class="src">{{ s.intent }}</span></td>
+  <td><span class="chip {{ 'obs' if s.status == 'present' else ('est' if s.status == 'thin' else 'una') }}">{{ s.status }}</span></td>
+  <td class="src">{{ s.url or s.evidence }}</td>
+</tr>
+{% endfor %}
+</tbody></table>
+{% if sm.topics %}<p class="src">On-page topics: {{ sm.topics|join(' · ') }}</p>{% endif %}
+{% if sm.canonical_conflicts %}
+<p class="src">Canonical host mismatch: {{ sm.canonical_conflicts|join(' · ') }}</p>
+{% endif %}
+<p class="src">{{ sm.methodology }}</p>
+{% else %}
+<p>Coverage map was not run. <span class="chip una">unavailable</span></p>
+{% endif %}
+</section>
+
+<section id="site">
+<h2>Site signals</h2>
+{% set rb = w.robots_intel %}
+{% if rb and rb.assessed %}
+<p>robots.txt published {{ rb.disallow|length }} disallow path(s)
+{% if rb.crawl_delay %} · crawl-delay {{ rb.crawl_delay }}{% endif %}.</p>
+{% elif rb %}
+<p>{{ rb.reason }} <span class="chip una">unavailable</span></p>
+{% endif %}
+{% set hd = w.header_intel %}
+{% if hd and hd.assessed %}
+<p>Security headers present: {{ hd.present.keys()|list|join(', ') or 'none of the six we record' }}.
+Missing: {{ hd.missing|join(', ') or '—' }}.</p>
+{% if hd.last_modified or hd.etag or hd.cache_control or hd.x_robots_tag %}
+<p>Freshness headers:
+{% if hd.last_modified %} Last-Modified {{ hd.last_modified }}{% endif %}
+{% if hd.etag %} · ETag {{ hd.etag|truncate(40) }}{% endif %}
+{% if hd.cache_control %} · Cache-Control {{ hd.cache_control }}{% endif %}
+{% if hd.x_robots_tag %} · X-Robots-Tag {{ hd.x_robots_tag }}{% endif %}.
+Last-Modified is the header, not a verified edit.</p>
+{% endif %}
+{% if hd.csp_hosts %}
+<p><b>CSP host tokens</b> — policy, not a live load list or vendor contract:
+{{ hd.csp_hosts|join(', ') }}.</p>
+{% endif %}
+<p class="src">{{ hd.methodology }}</p>
+{% endif %}
+{% set ix = w.index_intel %}
+{% if ix and ix.assessed and ix.pages %}
+<p><b>Indexability directives</b> — copied tokens, not a ranking claim.
+{% if ix.noindex %} {{ ix.noindex|length }} sampled page(s) printed noindex.{% endif %}</p>
+<table><thead><tr><th>URL</th><th>Source</th><th>Tokens</th></tr></thead><tbody>
+{% for p in ix.pages %}
+<tr><td class="src">{{ p.url|truncate(60) }}</td><td>{{ p.source }}</td>
+<td class="src">{{ p.tokens|join(', ') or p.raw }}</td></tr>
+{% endfor %}
+</tbody></table>
+<p class="src">{{ ix.methodology }}</p>
+{% elif ix and ix.assessed %}
+<p class="src">{{ ix.reason }}</p>
+{% endif %}
+{% set pf = w.public_intel %}
+{% if pf and pf.files %}
+<p><b>Well-known inventory</b> — published trust / AI / people / ads / privacy files. Not a security score and not traffic.</p>
+<table><thead><tr><th>Path</th><th>Role</th><th>Status</th><th>Notes</th></tr></thead><tbody>
+{% for f in pf.files %}
+<tr>
+  <td class="src">{{ f.path }}</td>
+  <td>{{ f.role or '—' }}</td>
+  <td>{{ 'present' if f.present else 'absent' }}</td>
+  <td class="src">{% if f.contacts %}Contact {{ f.contacts|join(', ') }}{% elif f.credits %}{{ f.credits|join('; ') }}{% elif f.role == 'ai' %}crawl invitation, not traffic{% else %}—{% endif %}</td>
+</tr>
+{% endfor %}
+</tbody></table>
+<p class="src">{{ pf.methodology }}</p>
+{% endif %}
+{% set ad = w.ads_intel %}
+{% if ad and ad.rows %}
+<p><b>ads.txt records</b> — published declarations, not spend:</p>
+<table><thead><tr><th>File</th><th>Exchange</th><th>Relationship</th><th>Publisher</th></tr></thead><tbody>
+{% for r in ad.rows %}
+<tr><td class="src">{{ r.path }}</td><td>{{ r.exchange }}</td>
+<td>{{ r.relationship }}</td><td class="src">{{ r.publisher }}</td></tr>
+{% endfor %}
+</tbody></table>
+<p class="src">{{ ad.methodology }}</p>
+{% elif ad and ad.assessed %}
+<p class="src">{{ ad.reason }}</p>
+{% endif %}
+{% set cl = w.claims_intel %}
+{% if cl and cl.assessed and (cl.verifications or cl.rel_me or cl.same_as) %}
+<p><b>Published claims</b>
+{% if cl.verifications %} · verification meta {{ cl.verifications|join(', ') }} (not Search Console status){% endif %}.</p>
+{% if cl.rel_me %}
+<p>rel=me:
+{% for m in cl.rel_me %}{{ m.host or m.url }}{% if not loop.last %}, {% endif %}{% endfor %}
+ — copied, not fetched, not a merge key.</p>
+{% endif %}
+{% if cl.same_as %}
+<p>sameAs:
+{% for s in cl.same_as %}{{ s.host or s.url }}{% if not loop.last %}, {% endif %}{% endfor %}
+ — copied, not fetched, not a merge key or follower count.</p>
+{% endif %}
+<p class="src">{{ cl.methodology }}</p>
+{% elif cl and cl.assessed %}
+<p class="src">{{ cl.reason }}</p>
+{% endif %}
+{% set cd = w.card_intel %}
+{% if cd and cd.assessed and (cd.og_type or cd.twitter_site or cd.banners) %}
+<p><b>Share cards</b>
+{% if cd.og_type %} · og:type {{ cd.og_type }}{% endif %}
+{% if cd.twitter_card %} · twitter:card {{ cd.twitter_card }}{% endif %}
+{% if cd.twitter_site %} · twitter:site {{ cd.twitter_site }} (not followers){% endif %}.</p>
+{% if cd.banners %}
+<p>App banners:
+{% for b in cd.banners %}{{ b.kind }} {{ b.value }}{% if not loop.last %}; {% endif %}{% endfor %}
+ — not store ranking.</p>
+{% endif %}
+<p class="src">{{ cd.methodology }}</p>
+{% elif cd and cd.assessed %}
+<p class="src">{{ cd.reason }}</p>
+{% endif %}
+{% set vn = w.vendor_intel %}
+{% if vn and vn.unique %}
+<p><b>Off-host resource hosts</b> from script/preconnect/stylesheet — not spend:
+{{ vn.unique|join(', ') }}.</p>
+<p class="src">{{ vn.methodology }}</p>
+{% elif vn and vn.assessed %}
+<p class="src">{{ vn.reason }}</p>
+{% endif %}
+{% set lk = w.link_intel %}
+{% if lk and lk.assessed and lk.rows %}
+<p><b>Document links</b>
+{% if lk.canonical %} · canonical {{ lk.canonical }}{% endif %}
+{% if lk.manifests %} · manifest {{ lk.manifests|join(', ') }} (listed, not fetched){% endif %}.</p>
+<table><thead><tr><th>Rel</th><th>URL</th><th>Via</th></tr></thead><tbody>
+{% for r in lk.rows %}
+<tr><td>{{ r.rel }}</td><td class="src">{{ r.url }}</td><td class="src">{{ r.via }}</td></tr>
+{% endfor %}
+</tbody></table>
+<p class="src">{{ lk.methodology }}</p>
+{% elif lk and lk.assessed %}
+<p class="src">{{ lk.reason }}</p>
+{% endif %}
+{% set sc = w.schema_intel %}
+{% if sc and sc.assessed %}
+<p>JSON-LD types:
+{% for t, n in sc.types.items() %}{{ t }} {{ n }}{% if not loop.last %} · {% endif %}{% endfor %}.</p>
+{% if sc.faqs %}
+<p><b>FAQ schema</b> (printed Q&amp;A, not a knowledge base we wrote):</p>
+<table><thead><tr><th>Question</th><th>Answer</th></tr></thead><tbody>
+{% for q in sc.faqs %}
+<tr><td>{{ q.question|truncate(80) }}</td><td class="src">{{ q.answer|truncate(120) or '—' }}</td></tr>
+{% endfor %}
+</tbody></table>
+{% endif %}
+{% if sc.jobs %}
+<p><b>JobPosting schema</b> — listed roles, not hiring volume:</p>
+<table><thead><tr><th>Title</th><th>Location</th><th>Posted</th><th>Salary</th></tr></thead><tbody>
+{% for j in sc.jobs %}
+<tr><td>{{ j.title }}</td><td class="src">{{ j.location or '—' }}</td>
+<td class="src">{{ j.date_posted or '—' }}</td>
+<td class="src">{{ j.salary or '—' }}</td></tr>
+{% endfor %}
+</tbody></table>
+{% endif %}
+{% if sc.events %}
+<p><b>Event schema</b>:</p>
+<table><thead><tr><th>Name</th><th>Starts</th><th>Where</th><th>Offer</th></tr></thead><tbody>
+{% for e in sc.events %}
+<tr><td>{{ e.name }}</td><td class="src">{{ e.start or '—' }}</td>
+<td class="src">{{ e.location or '—' }}</td>
+<td class="src">{{ e.offer or '—' }}</td></tr>
+{% endfor %}
+</tbody></table>
+{% endif %}
+{% if sc.articles %}
+<p><b>Article / BlogPosting schema</b> — dates are printed fields, not titles:</p>
+<table><thead><tr><th>Title</th><th>Published</th><th>Modified</th></tr></thead><tbody>
+{% for a in sc.articles %}
+<tr><td>{{ a.title|truncate(80) }}</td>
+<td class="src">{{ a.published or '—' }}</td>
+<td class="src">{{ a.modified or '—' }}</td></tr>
+{% endfor %}
+</tbody></table>
+{% endif %}
+{% if sc.courses %}
+<p><b>Course / program schema</b> — listed offerings, not enrollment:</p>
+<table><thead><tr><th>Name</th><th>Kind</th><th>Provider</th><th>Starts</th></tr></thead><tbody>
+{% for c in sc.courses %}
+<tr><td>{{ c.name }}</td><td>{{ c.kind }}</td>
+<td class="src">{{ c.provider or '—' }}</td>
+<td class="src">{{ c.start or '—' }}</td></tr>
+{% endfor %}
+</tbody></table>
+{% endif %}
+{% if sc.breadcrumbs %}
+<p><b>BreadcrumbList</b>:</p>
+<ul>{% for b in sc.breadcrumbs %}<li>{{ b.path }}</li>{% endfor %}</ul>
+{% endif %}
+{% if sc.contact_points %}
+<p><b>ContactPoint schema</b> — printed desks, not a verified helpdesk:</p>
+<table><thead><tr><th>Type</th><th>Telephone</th><th>Email</th></tr></thead><tbody>
+{% for c in sc.contact_points %}
+<tr><td>{{ c.contact_type or '—' }}</td>
+<td class="src">{{ c.telephone or '—' }}</td>
+<td class="src">{{ c.email or '—' }}</td></tr>
+{% endfor %}
+</tbody></table>
+{% endif %}
+{% if sc.item_lists %}
+<p><b>ItemList schema</b> — printed names, not inventory:</p>
+<table><thead><tr><th>Name</th><th>Items</th></tr></thead><tbody>
+{% for L in sc.item_lists %}
+<tr><td>{{ L.name }}</td>
+<td class="src">{% if L.number_of_items %}{{ L.number_of_items }} printed · {% endif %}{{ L.entries|join(', ') or '—' }}</td></tr>
+{% endfor %}
+</tbody></table>
+{% endif %}
+{% if sc.aggregate_offers %}
+<p><b>AggregateOffer schema</b> — printed range, not a market price:</p>
+<table><thead><tr><th>Name</th><th>Low</th><th>High</th><th>Currency</th><th>Count</th></tr></thead><tbody>
+{% for o in sc.aggregate_offers %}
+<tr><td>{{ o.name or '—' }}</td>
+<td class="src">{{ o.low or '—' }}</td>
+<td class="src">{{ o.high or '—' }}</td>
+<td class="src">{{ o.currency or '—' }}</td>
+<td class="src">{{ o.offer_count or '—' }}</td></tr>
+{% endfor %}
+</tbody></table>
+{% endif %}
+{% if sc.offer_catalogs %}
+<p><b>OfferCatalog schema</b> — listed names, not a complete catalog:</p>
+<table><thead><tr><th>Name</th><th>Items</th></tr></thead><tbody>
+{% for c in sc.offer_catalogs %}
+<tr><td>{{ c.name }}</td>
+<td class="src">{{ c.items|join(', ') or '—' }}</td></tr>
+{% endfor %}
+</tbody></table>
+{% endif %}
+{% if sc.speakable %}
+<p><b>Speakable schema</b> — printed selectors, not a featured-snippet or voice rank:</p>
+<table><thead><tr><th>Name</th><th>Selectors</th></tr></thead><tbody>
+{% for s in sc.speakable %}
+<tr><td>{{ s.name or '—' }}</td>
+<td class="src">{{ s.selectors|join(', ') or '—' }}</td></tr>
+{% endfor %}
+</tbody></table>
+{% endif %}
+{% if sc.hours %}
+<p><b>Opening hours schema</b> — printed slots, not an open-now verdict:</p>
+<table><thead><tr><th>Day</th><th>Opens</th><th>Closes</th><th>Name</th></tr></thead><tbody>
+{% for h in sc.hours %}
+<tr><td>{{ h.day or '—' }}</td>
+<td class="src">{{ h.opens or '—' }}</td>
+<td class="src">{{ h.closes or '—' }}</td>
+<td class="src">{{ h.name or '—' }}</td></tr>
+{% endfor %}
+</tbody></table>
+{% endif %}
+{% if sc.web_pages %}
+<p><b>WebPage schema</b> — lastReviewed is a printed field, not a verified edit. significantLink URLs are listed, not fetched:</p>
+<table><thead><tr><th>Name</th><th>Kind</th><th>lastReviewed</th><th>Reviewed by</th></tr></thead><tbody>
+{% for p in sc.web_pages %}
+<tr><td>{{ p.name }}</td><td>{{ p.kind }}</td>
+<td class="src">{{ p.last_reviewed or '—' }}</td>
+<td class="src">{{ p.reviewed_by or '—' }}</td></tr>
+{% endfor %}
+</tbody></table>
+{% endif %}
+{% if sc.nap %}
+<p>NAP from Organization schema:
+{{ sc.nap.name }} · {{ sc.nap.telephone or '—' }} · {{ sc.nap.address or '—' }}
+{% if sc.nap.hours %} · {{ sc.nap.hours }}{% endif %}
+{% if sc.nap.geo %} · {{ sc.nap.geo }}{% endif %}
+{% if sc.nap.founding_date %} · founded {{ sc.nap.founding_date }}{% endif %}.</p>
+{% endif %}
+{% if sc.serving %}
+<p>Serving prints:
+{% if sc.serving.area %} area {{ sc.serving.area }}{% endif %}
+{% if sc.serving.payments %} · pays {{ sc.serving.payments }}{% endif %}
+{% if sc.serving.price_range %} · {{ sc.serving.price_range }}{% endif %}
+{% if sc.serving.languages %} · {{ sc.serving.languages }}{% endif %}
+{% if sc.serving.employees %} · employees printed {{ sc.serving.employees }} (not headcount){% endif %}
+{% if sc.serving.also_known %} · also {{ sc.serving.also_known|join(', ') }} (not a merge key){% endif %}.</p>
+{% endif %}
+{% if sc.hreflang %}
+<p class="src">hreflang: {% for h in sc.hreflang %}{{ h.lang }}{% if not loop.last %}, {% endif %}{% endfor %}</p>
+{% endif %}
+{% set sf = w.surface_intel %}
+{% if sf and sf.links %}
+<p><b>Declared surfaces</b> the site linked (not name-searched):</p>
+<table><thead><tr><th>Kind</th><th>URL</th></tr></thead><tbody>
+{% for s in sf.links %}
+<tr><td>{{ s.kind }}</td><td class="src">{{ s.url }}</td></tr>
+{% endfor %}
+</tbody></table>
+{% elif sf and sf.assessed %}
+<p class="src">{{ sf.reason }}</p>
+{% endif %}
+{% if sc.people %}
+<p><b>Person schema</b> — printed names, not headcount:</p>
+<table><thead><tr><th>Name</th><th>Title</th></tr></thead><tbody>
+{% for p in sc.people %}
+<tr><td>{{ p.name }}</td><td class="src">{{ p.job_title or '—' }}</td></tr>
+{% endfor %}
+</tbody></table>
+{% endif %}
+{% if sc.videos %}
+<p><b>VideoObject</b> — dates are uploadDate fields:</p>
+<table><thead><tr><th>Title</th><th>Uploaded</th></tr></thead><tbody>
+{% for v in sc.videos %}
+<tr><td>{{ v.title|truncate(80) }}</td><td class="src">{{ v.uploaded or '—' }}</td></tr>
+{% endfor %}
+</tbody></table>
+{% endif %}
+{% if sc.howtos %}
+<p><b>HowTo schema</b> — printed steps/tools, not a shopping list or completion forecast:</p>
+<table><thead><tr><th>Name</th><th>Steps</th><th>Tools</th><th>Time</th></tr></thead><tbody>
+{% for h in sc.howtos %}
+<tr><td>{{ h.name }}</td>
+<td class="src">{{ h.steps }}</td>
+<td class="src">{{ h.tools|join(', ') or '—' }}</td>
+<td class="src">{{ h.total_time or '—' }}</td></tr>
+{% endfor %}
+</tbody></table>
+{% endif %}
+{% if sc.search_actions %}
+<p class="src">SearchAction: {% for s in sc.search_actions %}{{ s.target }}{% if not loop.last %}; {% endif %}{% endfor %}</p>
+{% endif %}
+{% if sc.apps %}
+<p><b>Software / mobile application schema</b> — printed OS, not an app-store scrape:</p>
+<table><thead><tr><th>Name</th><th>Kind</th><th>OS</th></tr></thead><tbody>
+{% for a in sc.apps %}
+<tr><td>{{ a.name }}</td><td>{{ a.kind }}</td><td class="src">{{ a.os or '—' }}</td></tr>
+{% endfor %}
+</tbody></table>
+{% endif %}
+{% elif sc %}
+<p>{{ sc.reason }} <span class="chip una">unavailable</span></p>
+{% endif %}
+{% set lg = w.legal_intel %}
+{% if lg and lg.assessed %}
+<p><b>Sampled policy pages</b>{% if lg.latest_updated %} · latest dated {{ lg.latest_updated }}{% endif %}:</p>
+<table><thead><tr><th>Kind</th><th>Updated</th><th>URL</th></tr></thead><tbody>
+{% for p in lg.policies %}
+<tr><td>{{ p.kind }}</td><td class="src">{{ p.updated or '—' }}</td><td class="src">{{ p.url }}</td></tr>
+{% endfor %}
+</tbody></table>
+<p class="src">{{ lg.methodology }}</p>
+{% elif lg %}
+<p>{{ lg.reason }} <span class="chip una">unavailable</span></p>
+{% endif %}
+{% set idn = w.identity_intel %}
+{% if idn and idn.assessed %}
+<p><b>Printed identifiers</b> (not a registry lookup):</p>
+<table><thead><tr><th>Kind</th><th>Value</th><th>Source</th></tr></thead><tbody>
+{% for i in idn.ids %}
+<tr><td>{{ i.kind }}</td><td class="src">{{ i.value }}</td><td class="src">{{ i.source }}</td></tr>
+{% endfor %}
+</tbody></table>
+<p class="src">{{ idn.methodology }}</p>
+{% elif idn %}
+<p>{{ idn.reason }} <span class="chip una">unavailable</span></p>
+{% endif %}
+{% set fl = w.filings_intel %}
+{% if fl and fl.assessed %}
+<p><b>Official filings</b> — SEC / GLEIF only when a CIK or LEI already existed. No valuation.</p>
+<table><thead><tr><th>Registry</th><th>Identifier</th><th>Name</th><th>Status</th><th>Detail</th></tr></thead><tbody>
+{% for rec in fl.records %}
+<tr>
+  <td>{{ rec.kind }}</td>
+  <td class="src">{{ rec.identifier }}</td>
+  <td>{{ rec.name or '—' }}</td>
+  <td><span class="chip {{ 'obs' if rec.status not in ('unavailable', '') else 'una' }}">{{ rec.status or 'unavailable' }}</span></td>
+  <td class="src">{{ rec.detail or rec.reason or '—' }}</td>
+</tr>
+{% endfor %}
+</tbody></table>
+{% if fl.records %}
+{% for rec in fl.records %}
+{% if rec.filings %}
+<p class="note">Recent {{ rec.kind|upper }} forms (not a price):
+{% for f in rec.filings[:6] %}{{ f.form }}{% if f.filed %} ({{ f.filed }}){% endif %}{% if not loop.last %}, {% endif %}{% endfor %}.</p>
+{% endif %}
+{% endfor %}
+{% endif %}
+<p class="src">{{ fl.methodology }}</p>
+{% elif fl %}
+<p>{{ fl.reason }} <span class="chip una">unavailable</span></p>
+{% endif %}
+{% set op = w.onpage_intel %}
+{% if op and op.assessed and op.hits %}
+<p><b>On-page surfaces</b> — listed, not fetched:</p>
+<table><thead><tr><th>Kind</th><th>Provider</th><th>URL</th></tr></thead><tbody>
+{% for h in op.hits %}
+<tr><td>{{ h.kind }}</td><td>{{ h.provider }}</td><td class="src">{{ h.url|truncate(80) }}</td></tr>
+{% endfor %}
+</tbody></table>
+<p class="src">{{ op.methodology }}</p>
+{% elif op and op.assessed %}
+<p class="src">{{ op.reason or 'No iframe, form, chat link or PDF href on sampled pages.' }}</p>
+{% endif %}
+{% set loc = w.locale_intel %}
+{% if loc and loc.assessed and (loc.langs or loc.og_locales or loc.hreflang or loc.content_language) %}
+<p><b>Locale tags</b> — printed tags, not a market or TAM:
+{% if loc.langs %} html lang {{ loc.langs|join(', ') }}{% endif %}
+{% if loc.og_locales %} · og:locale {{ loc.og_locales|join(', ') }}{% endif %}
+{% if loc.hreflang %} · hreflang {{ loc.hreflang|join(', ') }}{% endif %}
+{% if loc.content_language %} · Content-Language {{ loc.content_language }}{% endif %}.</p>
+<p class="src">{{ loc.methodology }}</p>
+{% elif loc and loc.assessed %}
+<p class="src">{{ loc.reason or 'No html lang, og:locale, hreflang or Content-Language on sampled pages.' }}</p>
+{% endif %}
+</section>
+
+<section id="feeds">
+<h2>First-party feed</h2>
+{% set fi = w.feed_intel %}
+{% if fi and fi.assessed and fi.items %}
+<p>Items from RSS/Atom the homepage advertised.
+{% if fi.latest_published %} Latest dated <b>{{ fi.latest_published }}</b>.{% endif %}
+Dates are feed fields, not titles.</p>
+<table><thead><tr><th>Title</th><th>Published</th></tr></thead><tbody>
+{% for it in fi.items %}
+<tr>
+  <td>{{ it.title|truncate(80) or it.url }}</td>
+  <td class="src">{{ it.published or '—' }}</td>
+</tr>
+{% endfor %}
+</tbody></table>
+<p class="src">{{ fi.methodology }}</p>
+{% elif fi %}
+<p>{{ fi.reason }} <span class="chip una">unavailable</span></p>
+{% else %}
+<p>First-party feed was not run. <span class="chip una">unavailable</span></p>
+{% endif %}
+</section>
+
+<section id="news">
+<h2>12 · Narrative radar</h2>
+{% set ni = w.news_intel %}
+{% if ni and ni.assessed and ni.items %}
+<p>Search-ensemble items for <b>{{ ni.query_used }}</b>.
+{% if ni.pages_hydrated %} {{ ni.pages_hydrated }} article page(s) fetched.{% endif %}
+Labels are keyword matches, not reach or sentiment scores.</p>
+{% if ni.narratives %}
+<p class="src">{% for k, v in ni.narratives.items() %}{{ k }} {{ v }}{% if not loop.last %} · {% endif %}{% endfor %}</p>
+{% endif %}
+<table><thead><tr><th>Narrative</th><th>Title</th><th>Source</th><th>Published</th><th>Page</th></tr></thead><tbody>
+{% for it in ni.items %}
+<tr>
+  <td><span class="chip obs">{{ it.narrative }}</span></td>
+  <td>{{ it.title|truncate(70) }}</td>
+  <td class="src">{{ it.source_host or '—' }}</td>
+  <td class="src">{{ it.published or '—' }}</td>
+  <td class="src">{{ it.page_status or 'search' }}</td>
+</tr>
+{% endfor %}
+</tbody></table>
+<p class="src">{{ ni.methodology }}</p>
+{% elif ni %}
+<p>{{ ni.reason }} <span class="chip una">unavailable</span></p>
+{% else %}
+<p>Narrative radar was not run. <span class="chip una">unavailable</span></p>
+{% endif %}
+</section>
+
+<section id="open-sources">
+<h2>Open public APIs</h2>
+{% set os = w.open_source_intel %}
+{% if os and os.assessed %}
+<p>Keyless records from <a href="https://github.com/public-apis/public-apis">public-apis</a>. Copied as returned. Not traffic, rank or sentiment.</p>
+{% if os.wikipedia and os.wikipedia.assessed %}
+<p><b>{{ os.wikipedia.title }}</b> — {{ os.wikipedia.extract|truncate(280) }}
+<span class="chip obs">wikipedia</span></p>
+{% endif %}
+{% if os.wayback and os.wayback.assessed %}
+<p>Archive.org first capture {{ os.wayback.first_capture or '—' }} · last {{ os.wayback.last_capture or '—' }}
+<span class="chip obs">archive.org</span></p>
+{% endif %}
+{% if os.country and os.country.assessed %}
+<p>ccTLD .{{ os.country.tld }} → {{ os.country.name }} ({{ os.country.region }})
+<span class="chip obs">rest countries</span></p>
+{% endif %}
+{% if os.geo and os.geo.assessed %}
+<p>{{ os.geo.label }} · {{ os.geo.lat }}, {{ os.geo.lon }}
+<span class="chip obs">nominatim</span></p>
+{% endif %}
+{% if os.words and os.words.assessed and os.words.rows %}
+<p>Datamuse associations:
+{% for row in os.words.rows[:8] %}{{ row.word }}{% if not loop.last %}, {% endif %}{% endfor %}
+<span class="chip obs">datamuse</span></p>
+{% endif %}
+{% if os.domains and os.domains.assessed and os.domains.rows %}
+<table><thead><tr><th>Related registered name</th><th>Created</th></tr></thead><tbody>
+{% for row in os.domains.rows[:8] %}
+<tr><td>{{ row.domain }}</td><td class="src">{{ row.created or '—' }}</td></tr>
+{% endfor %}
+</tbody></table>
+{% endif %}
+<p class="src">{{ os.methodology }}</p>
+{% elif os %}
+<p>{{ os.reason }} <span class="chip una">unavailable</span></p>
+{% else %}
+<p>Open public APIs were not run. <span class="chip una">unavailable</span></p>
+{% endif %}
+</section>
+
+<section id="risk">
+<h2>Risk radar</h2>
+{% set rk = w.risk_intel %}
+{% if rk and rk.assessed %}
+<p>Level <b>{{ rk.level }}</b> · crisis {{ rk.crisis_n }} · criticism {{ rk.criticism_n }}
+<span class="chip {{ 'una' if rk.level == 'none' else 'est' }}">{{ rk.level }}</span></p>
+{% if rk.items %}
+<table><thead><tr><th>Narrative</th><th>Title</th></tr></thead><tbody>
+{% for it in rk.items %}
+<tr><td>{{ it.narrative }}</td><td>{{ it.title|truncate(80) }}</td></tr>
+{% endfor %}
+</tbody></table>
+{% endif %}
+<p class="src">{{ rk.methodology }}</p>
+{% elif rk %}
+<p>{{ rk.reason }} <span class="chip una">unavailable</span></p>
+{% else %}
+<p>Risk radar was not run.</p>
+{% endif %}
+</section>
+
+<section id="oracle">
+<h2>13 · Outlook (ORACLE + SIGNAL)</h2>
+{% set tr = w.trend_intel %}
+{% if tr %}
+<p>SIGNAL class <b>{{ tr.classification }}</b>
+{% if tr.velocity is not none %} · velocity {{ '%+0.1f'|format(tr.velocity) }}{% endif %}
+ · {{ tr.persistence }} observation(s).
+{% if not tr.assessed %} <span class="chip una">{{ tr.reason }}</span>{% endif %}</p>
+<p class="src">{{ tr.methodology }}</p>
+{% endif %}
+{% set pr = w.prediction %}
+{% if pr %}
+<div class="grid">
+  <div class="card"><div class="lbl">Direction</div><div class="big" style="font-size:1.35rem">{{ pr.direction }}</div>
+    {% if pr.score_delta is not none %}<div class="sm">{{ '%+0.1f'|format(pr.score_delta) }} vs last snapshot</div>{% endif %}</div>
+  <div class="card"><div class="lbl">Confidence</div><div class="big">{{ (pr.confidence * 100)|round|int }}<span style="font-size:.5em">%</span></div>
+    <div class="sm">{{ pr.observations }} observation(s)</div></div>
+  <div class="card"><div class="lbl">Content freshness</div><div class="big" style="font-size:1.35rem">{{ pr.freshness }}</div>
+    {% if pr.days_since_dated_content is not none %}<div class="sm">{{ pr.days_since_dated_content }} days since dated page</div>{% endif %}</div>
+</div>
+<p>{{ pr.outlook }}</p>
+{% if pr.tech_added or pr.tech_removed %}
+<p class="src">{% if pr.tech_added %}Added: {{ pr.tech_added|join(', ') }}. {% endif %}{% if pr.tech_removed %}Removed: {{ pr.tech_removed|join(', ') }}.{% endif %}</p>
+{% endif %}
+<p class="src">{{ pr.methodology }}</p>
+{% else %}
+<p>No prior snapshot and no dated content were available for an outlook. <span class="chip una">unavailable</span></p>
+{% endif %}
+</section>
+
+<section id="reason">
+<h2>14 · Critique and synthesis</h2>
+{% set rs = w.reasoning %}
+{% if rs %}
+<p class="src">{{ rs.methodology }}</p>
+{% if rs.findings %}
+<ul>{% for f in rs.findings %}<li>{{ f }}</li>{% endfor %}</ul>
+{% endif %}
+{% if rs.critiques %}
+<p><b>Limits</b></p>
+<ul>{% for c in rs.critiques %}<li>{{ c }}</li>{% endfor %}</ul>
+{% endif %}
+{% if rs.recommendations %}
+<p><b>Recommended next actions</b> (from measured gaps only)</p>
+<ul>{% for r in rs.recommendations %}<li>{{ r }}</li>{% endfor %}</ul>
+{% endif %}
+{% else %}
+<p>No synthesis was attached to this report.</p>
+{% endif %}
+</section>
+
+<section id="opps">
+<h2>15 · Opportunities</h2>
+{% if w.opportunities %}
+{% for o in w.opportunities %}
+<div class="call opportunity"><b>{{ o.title }}</b><p>{{ o.why }}</p>
+<p class="src">Evidence: {{ o.evidence }}</p></div>
+{% endfor %}
+{% else %}
+<p>No rule-driven opportunities fired on this sample — the measured fundamentals are
+in place.</p>
+{% endif %}
+</section>
+
+<section id="unmeasured">
+<h2>16 · Not measured, and why</h2>
+<table><thead><tr><th>Item</th><th>Why it is not in this report</th></tr></thead><tbody>
+{% for u in w.unavailable %}
+<tr><td>{{ u.item }}</td><td class="src">{{ u.why }}</td></tr>
+{% endfor %}
+</tbody></table>
+<p class="src">OMNISCOPE never substitutes an estimate for a number that requires data
+it does not have. <span class="chip una">unavailable</span> is a valid answer.</p>
+</section>
+
+<section id="evidence">
+<h2>17 · Evidence</h2>
+<div class="tw"><table><thead>
+<tr><th>Claim supported</th><th>Source</th><th>Method</th><th>Collected</th><th>SHA-256</th></tr>
+</thead><tbody>
+{% for e in w.evidence.records %}
+<tr>
+  <td>{{ e.claim }}</td>
+  <td class="src">{{ e.source_url|truncate(56) }}</td>
+  <td>{{ e.method }}{{ ' (cache)' if e.from_cache }}</td>
+  <td class="src">{{ e.collected_at|truncate(19, True, '') }}</td>
+  <td class="src">{{ e.content_sha256[:12] if e.content_sha256 else '—' }}</td>
+</tr>
+{% endfor %}
+</tbody></table></div>
+</section>
+
+<footer>{{ w.entity_name }} · generated {{ w.generated_at.strftime('%d %b %Y') }} ·
+OMNISCOPE web engine v{{ w.engine_version }}. Figures drift; re-generate before acting.</footer>
+</main>
+</body></html>

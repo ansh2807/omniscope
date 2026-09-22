@@ -1,0 +1,34 @@
+{% extends "base.html" %}{% block title %}Alerts · {{ app_name }}{% endblock %}{% block body %}
+<div class="page-head">
+  <span class="eyebrow">Watchlists</span>
+  <h1>Intelligence alerts</h1>
+  <p class="sub">Homepage and advertised-feed diffs. A sweep fetches the public homepage only — title, H1, feed, tech, socials. It does not invent a threat score, traffic, or re-bill a report. New websites are watched after Deep Analyze so an overnight interval has a baseline.</p>
+  <form method="post" action="/watch/run" style="margin-top:12px;display:inline">
+    <button type="submit" class="ghost">Run homepage sweep</button>
+  </form>
+  <a class="ghost" href="/digest" style="display:inline-block;margin-left:8px">open digest</a>
+</div>
+
+{% if alerts %}
+<div class="table-wrap">
+<table>
+<thead><tr><th>When</th><th>Entity</th><th>Kind</th><th>Alert</th></tr></thead>
+<tbody>
+{% for a in alerts %}
+<tr>
+  <td class="muted mono">{{ a.created_at.strftime('%d %b %Y %H:%M') }}</td>
+  <td>{{ entity_names.get(a.entity_id, a.entity_id) }}</td>
+  <td><span class="badge {{ 'err' if a.severity == 'urgent' else ('warn' if a.severity == 'watch' else 'run') }}">{{ a.kind }}</span></td>
+  <td>
+    <b>{{ a.title }}</b>
+    <div class="muted">{{ a.detail }}</div>
+  </td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+{% else %}
+<div class="empty">No stored change yet. Deep Analyze a website (it is watched automatically), then wait for the overnight sweep or run one here.</div>
+{% endif %}
+{% endblock %}

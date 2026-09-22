@@ -1,0 +1,49 @@
+{% extends "base.html" %}{% block body %}
+<p class="back"><a href="/jobs/{{ job.id }}">← back to job</a></p>
+<div class="page-head">
+  <h1>Instagram input</h1>
+</div>
+
+{% if blocking %}
+<div class="card soft-bad">
+  <p class="flash"><b>This one is needed.</b> {{ reason }}</p>
+</div>
+{% else %}
+<div class="card soft-ok">
+  <p style="margin:0 0 10px"><b>You can skip this entirely.</b></p>
+  <p class="muted" style="margin:0">{{ reason }}</p>
+</div>
+{% endif %}
+
+{% if not browser_on and not public_email_mode %}
+<div class="card soft-warn">
+  <p style="margin:0 0 8px"><b>Tip — this form gets shorter if you enable the browser tier.</b></p>
+  <p class="muted" style="margin:0">The engine can read follower counts, bio, verification
+  and highlight names off the rendered profile, logged out. Only genuinely login-walled
+  fields — reel views, likes, comments and audience demographics — would still need a human.</p>
+</div>
+{% endif %}
+
+<form method="post" action="/jobs/{{ job.id }}/manual">
+<div class="grid2">
+{% for f in fields %}
+  <div{% if f.type in ('textarea',) %} style="grid-column:1/-1"{% endif %}>
+  <label>{{ f.label }}{% if f.help %}<span class="h">{{ f.help }}</span>{% endif %}
+  {% if f.type == 'textarea' %}<textarea name="{{ f.key }}"></textarea>
+  {% elif f.type == 'checkbox' %}<input type="checkbox" name="{{ f.key }}" style="width:auto">
+  {% elif f.type == 'number' %}<input type="number" name="{{ f.key }}">
+  {% else %}<input type="text" name="{{ f.key }}">{% endif %}
+  </label></div>
+{% endfor %}
+</div>
+<div class="row" style="margin-top:22px">
+  <button type="submit">{{ "Generate report" if blocking else "Save and regenerate" }} <span class="btn-arrow">→</span></button>
+</div>
+</form>
+
+{% if not blocking %}
+<form method="post" action="/jobs/{{ job.id }}/skip" style="margin-top:12px">
+  <button type="submit" class="secondary">Skip — generate the report without this</button>
+</form>
+{% endif %}
+{% endblock %}

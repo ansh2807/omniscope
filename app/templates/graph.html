@@ -1,0 +1,55 @@
+{% extends "base.html" %}{% block title %}Graph · {{ app_name }}{% endblock %}{% block body %}
+<div class="page-head">
+  <span class="eyebrow">Intelligence graph</span>
+  <h1>Entity map</h1>
+  <p class="sub">Stored entities and evidenced links only. A shared name never draws an edge.</p>
+</div>
+
+{% if not g.assessed %}
+<div class="empty">{{ g.reason }}</div>
+{% else %}
+<div class="grid4" style="margin:24px 0">
+  <div class="stat"><div class="lbl">Nodes</div><div class="big">{{ g.nodes|length }}</div></div>
+  <div class="stat"><div class="lbl">Edges</div><div class="big">{{ g.edges|length }}</div></div>
+  <div class="stat"><div class="lbl">Isolated</div><div class="big">{{ g.isolated_n }}</div><div class="sm">no stored link</div></div>
+</div>
+
+<h2>Links</h2>
+{% if g.edges %}
+<div class="table-wrap">
+<table>
+<thead><tr><th>From</th><th>Relation</th><th>To</th><th>Evidence</th></tr></thead>
+<tbody>
+{% for e in g.edges %}
+<tr>
+  <td><a href="/entities/{{ e.from_id }}">{{ e.from_name }}</a></td>
+  <td><span class="badge run">{{ e.rel }}</span></td>
+  <td><a href="/entities/{{ e.to_id }}">{{ e.to_name }}</a></td>
+  <td class="muted">{{ e.evidence or e.method or '—' }} · {{ '%.0f'|format(e.confidence * 100) }}%</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+{% else %}
+<p class="muted">No evidenced links yet. Analyze a website that lists social accounts, or a creator whose profile lists the same domain.</p>
+{% endif %}
+
+<h2>Nodes</h2>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Entity</th><th>Kind</th><th>Score</th></tr></thead>
+<tbody>
+{% for n in g.nodes %}
+<tr>
+  <td><a href="{{ n.href }}"><b>{{ n.name }}</b></a><div class="muted">{{ n.domain or '—' }}</div></td>
+  <td><span class="badge run">{{ n.kind }}</span>{% if n.watched %} · watching{% endif %}</td>
+  <td class="mono">{% if n.score is not none %}{{ n.score }}{% else %}—{% endif %}</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+<p class="muted" style="margin-top:16px">{{ g.methodology }}</p>
+{% endif %}
+{% endblock %}

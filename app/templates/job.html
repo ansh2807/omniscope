@@ -1,0 +1,89 @@
+{% extends "base.html" %}{% block title %}Job · {{ app_name }}{% endblock %}{% block body %}
+<p class="back"><a href="/">← Workspace</a></p>
+<h1>Report job</h1>
+<p class="sub mono" style="max-width:100%">{{ job.seed_url }}</p>
+
+<div class="card">
+  <div class="row-between" style="align-items:center">
+    <div>
+      <span class="badge {{ 'ok' if job.status=='done' else 'err' if job.status=='failed' else 'warn' if job.status=='needs_input' else 'run' }}">{{ job.status }}</span>
+      <span class="muted" style="margin-left:8px">{{ job.stage or 'queued' }}</span>
+    </div>
+    <div class="muted mono">{{ job.progress }}%</div>
+  </div>
+  <div class="bar"><i style="width:{{ job.progress }}%"></i></div>
+  {% if job.error %}<p class="muted" style="color:var(--bad);margin-top:14px">{{ job.error }}</p>{% endif %}
+  {% if job.recipient_email and job.status not in ('done','failed') %}
+  <p class="muted" style="margin:14px 0 0">When this finishes we email {{ job.recipient_email }}. The on-site copy is deleted after {{ report_ttl_label }}.</p>
+  {% endif %}
+</div>
+
+{% if job.status == 'needs_input' %}
+<div class="card">
+  <h2 class="plain">Instagram did not print a follower count</h2>
+  <p class="muted">Public profiles still often serve a login wall to automated requests.
+  Nobody needs to type numbers. Continue and that field stays <b>unavailable</b> — not guessed.</p>
+  <div class="row" style="margin-bottom:0">
+    <form method="post" action="/jobs/{{ job.id }}/skip">
+      <button type="submit">Continue without it <span class="btn-arrow">→</span></button>
+    </form>
+    <a class="btn secondary" href="/jobs/{{ job.id }}/manual">Add numbers from Insights</a>
+  </div>
+</div>
+{% endif %}
+
+{% if report %}
+<div class="card hero">
+  <span class="eyebrow">Report ready — download now</span>
+  <h2 class="plain" style="font-size:1.35rem;margin-bottom:6px">{{ report.subject_name }}</h2>
+  <p class="muted" style="margin-bottom:0">
+    Model confidence {{ (report.overall_confidence*100)|round|int }}%
+    {% if report.fit_score is not none %} · media-buy fit <b style="color:var(--txt)">{{ report.fit_score }}</b>{% endif %}
+  </p>
+  {% if report_ttl_minutes %}
+  <p class="muted" style="margin:12px 0 0">This report is deleted in
+    <b class="mono" data-ttl="{{ ttl_seconds if ttl_seconds is not none else report.created_at|ttl_left }}">…</b>.
+    Download HTML, JSON or Word before then — it is not kept on the server.</p>
+  {% endif %}
+  {% if job.recipient_email %}
+  <p class="muted" style="margin:8px 0 0">
+    {% if job.email_status == 'sent' %}Sent to {{ job.recipient_email }}.{% elif job.email_status == 'failed' %}Could not email {{ job.recipient_email }} — download now.{% elif job.email_status == 'skipped' %}Email is not configured on this instance — download now.{% else %}Will email {{ job.recipient_email }} when the pack is ready.{% endif %}
+  </p>
+  {% endif %}
+  <div class="row" style="margin-top:18px">
+    <a class="btn" href="/r/{{ report.share_slug }}">Open report <span class="btn-arrow">→</span></a>
+    <a class="btn secondary" href="/r/{{ report.share_slug }}.html">Download HTML</a>
+    {% if report.payload_json %}
+    <a class="btn secondary" href="/r/{{ report.share_slug }}.json">Download JSON</a>
+    {% endif %}
+    {% if report.docx_path %}
+    <a class="btn secondary" href="/r/{{ report.share_slug }}.docx">Download Word</a>
+    {% endif %}
+    {% if report.kind == 'single' and not public_email_mode %}
+    <form method="post" action="/shortlists/quick-add">
+      <input type="hidden" name="report_id" value="{{ report.id }}">
+      <button type="submit" class="secondary">Add to shortlist</button>
+    </form>
+    {% endif %}
+  </div>
+  <p class="muted mono" style="margin:14px 0 0">share: {{ report.share_slug }}</p>
+</div>
+
+{% if can_enrich %}
+<div class="card soft-ok">
+  <h2 class="plain" style="color:var(--acc)">Sharpen the Instagram numbers</h2>
+  <p class="muted">The report is complete. Instagram's post grid is login-walled, so reel
+  views, likes, comments and private demographics are currently <b>unavailable</b>, not guessed.
+  Pasting them from Insights or a media kit upgrades those fields to <b>observed</b>.</p>
+  {% if already_enriched %}<p class="muted">Analyst input has already been applied once.</p>{% endif %}
+  <p style="margin-bottom:0"><a class="btn secondary" href="/jobs/{{ job.id }}/manual">Add Instagram numbers</a></p>
+</div>
+{% endif %}
+
+{% elif job.status not in ('done','failed','needs_input') %}
+<div class="card flat">
+  <p class="muted flash">Working… refreshing automatically. The free path reads public sources; a Serper key adds Google search when you pasted one.</p>
+</div>
+<script>setTimeout(()=>location.reload(),3000)</script>
+{% endif %}
+{% endblock %}

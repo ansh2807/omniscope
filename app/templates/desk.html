@@ -1,0 +1,64 @@
+{% extends "base.html" %}{% block title %}Marketing desk · {{ app_name }}{% endblock %}{% block body %}
+<div class="page-head">
+  <span class="eyebrow">Desk</span>
+  <h1>Basic marketing needs, from evidence</h1>
+  <p class="sub">DESK is the beginner layer on top of Deep Analyze. It maps what we already collected onto the eight questions a marketer actually asks. Empty slots stay unavailable. We will not invent traffic, TAM, demographics, or Instagram Insights.</p>
+</div>
+
+<h2>How to read a chip</h2>
+<div class="bento">
+  <div class="card span-3"><b>Observed</b><span class="muted">Copied from a public page or official API.</span></div>
+  <div class="card span-3"><b>Calculated</b><span class="muted">Derived from those public numbers — a median, a cadence, a score.</span></div>
+  <div class="card span-3"><b>Modelled</b><span class="muted">A labelled score on public fields. Not a platform fact.</span></div>
+  <div class="card span-3"><b>Unavailable</b><span class="muted">We did not see it. Empty is not zero.</span></div>
+</div>
+
+<h2>Website briefs</h2>
+<p class="sub">Use this when you pasted a company or domain. Fill the holes in this order: name the offer, attach proof, give a stranger one next step, then measure.</p>
+<div class="bento">
+{% for g in web_guide %}
+  <div class="card span-3"><b>{{ g.title }}</b><span class="muted">{{ g.plain }}</span></div>
+{% endfor %}
+</div>
+
+<h2>Creator briefs</h2>
+<p class="sub">Use this when you pasted a creator. Price from public delivery, not from a login-walled follow count. Wikidata works are not a product stack. Wikipedia pageviews are not traffic.</p>
+<div class="bento">
+{% for g in creator_guide %}
+  <div class="card span-3"><b>{{ g.title }}</b><span class="muted">{{ g.plain }}</span></div>
+{% endfor %}
+</div>
+
+<h2>Playbooks</h2>
+<p class="sub">A playbook is a four-week template that appears only when a public surface triggered it — a feed, ads.txt, llms.txt, a login wall, a printed CIK/CIN, or a missing offer. It is not a forecast and not a media plan. Compare two stored desks on <a href="/compare">Compare</a> without declaring a winner. Optional prose appears only when an LLM key is configured; the desk works with none.</p>
+<div class="bento">
+  <div class="card span-3"><b>Owned feed</b><span class="muted">If they advertised RSS/Atom, publish offer → proof → a missing path → re-measure.</span></div>
+  <div class="card span-3"><b>ads.txt</b><span class="muted">A publisher declaration. Not spend, not your paid-social brief.</span></div>
+  <div class="card span-3"><b>llms.txt / ai.txt</b><span class="muted">A crawl invitation. Not bot traffic and not a ranking.</span></div>
+  <div class="card span-3"><b>Login wall</b><span class="muted">Empty is not zero. Paste a YouTube or site URL they already print.</span></div>
+</div>
+
+<h2>Stored desks</h2>
+<p class="sub">Rows appear after Deep Analyze stores a pack. They expire with the report.</p>
+{% if rows %}
+<div class="table-wrap">
+<table>
+<thead><tr><th>Subject</th><th>Kind</th><th>This week's job</th><th>Posture</th><th>Unavailable</th></tr></thead>
+<tbody>
+{% for r in rows %}
+<tr>
+  <td><a href="{{ r.href }}">{{ r.subject }}</a></td>
+  <td class="mono">{{ r.kind }}</td>
+  <td>{{ r.job }}</td>
+  <td class="muted">{{ r.posture }}</td>
+  <td class="mono">{{ r.unavailable }}/{{ r.needs }}</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+{% else %}
+<div class="empty">No desks stored yet. <a href="/">Deep Analyze a website or creator</a>.</div>
+{% endif %}
+<p class="muted" style="margin-top:16px">ads.txt is a publisher declaration, not ad spend. A missing Instagram grid is a login wall, not zero followers. Download the pack before the {{ report_ttl_label }} timer.</p>
+{% endblock %}

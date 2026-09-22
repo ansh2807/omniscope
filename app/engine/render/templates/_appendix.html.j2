@@ -1,0 +1,67 @@
+<section id="{{ pre }}method">
+<h2>17 — Appendix: Method, Limits &amp; Sources</h2>
+<div class="lede">What was observed, calculated, modelled, and left unavailable.</div>
+<h3>Confidence framework</h3>
+<div class="tw"><table><thead><tr><th style="width:16%">Label</th><th style="width:44%">Meaning</th><th>How to use it</th></tr></thead><tbody>
+<tr><td><span class="chip obs">OBSERVED</span></td><td>Read directly from a public page or supplied first-party analytics. Precision and source scope are stated.</td><td>Quote with source date and scope.</td></tr>
+<tr><td><span class="chip obs">CALCULATED</span></td><td>Arithmetic or classification over observed inputs, such as a sample median or topic-marker share.</td><td>Use only for the stated sample; do not generalise to unavailable private analytics.</td></tr>
+<tr><td><span class="chip est">MODELLED n%</span></td><td>A directional content-stage hypothesis. Category baselines never become creator-specific demographic facts.</td><td>Use to form tests. Verify before targeting or committing budget.</td></tr>
+<tr><td><span class="chip una">UNAVAILABLE</span></td><td>Not obtainable publicly. Not modelled, not guessed at.</td><td>Request directly from the creator.</td></tr>
+</tbody></table></div>
+
+<h3>Method</h3>
+<ul class="t">
+<li><b>Resolution.</b> The seed link is normalised to a platform and canonical handle.</li>
+<li><b>Identity expansion.</b> Two independent streams, cross-referenced: the creator's own outbound link graph, and a search-operator layer run through a licensed search API.</li>
+<li><b>Collection.</b> Every surface is fetched in parallel through a robots-respecting, rate-limited, cached client. Official APIs are used where they exist.</li>
+<li><b>Measurement.</b> Every metric is scoped to the collected sample. Latest, popular and exhaustive histories are kept distinct; views are not described as unique people, ratings are not described as transactions, and offer price is not described as income or demand.</li>
+<li><b>Inference.</b> Only life-stage relevance may be modelled from content. Gender, income, device, follower cities, relationship depth and conversion remain unavailable without first-party evidence. {{ a.signals_fired|length }} defensible audience rules fired.</li>
+</ul>
+
+{% if p.verification %}
+<h3>Verification ledger</h3>
+<p class="note">Every row states whether a fact is corroborated, observed once, conflicted, or withheld. Search results discover candidates but do not prove ownership.</p>
+<div class="grid g3">
+  <div class="card"><div class="lbl">Query purposes executed</div><div class="big">{{ p.verification.query_count }}</div><div class="sm">within a bounded licensed-search budget</div></div>
+  <div class="card"><div class="lbl">Search providers agreeing</div><div class="big">{{ p.verification.provider_count }}</div><div class="sm">provider consensus is retained per hit</div></div>
+  <div class="card"><div class="lbl">Oldest evidence age</div><div class="big">{{ (p.verification.freshness_hours|string ~ 'h') if p.verification.freshness_hours is not none else '—' }}</div><div class="sm">at report generation time</div></div>
+</div>
+<div class="tw"><table><thead><tr><th>Claim</th><th>Value used</th><th>Status</th><th>Confidence</th><th>Method / conflict</th><th>Sources</th></tr></thead><tbody>
+{% for cl in p.verification.claims %}<tr{% if cl.status in ('conflicted','withheld') %} class="dim"{% endif %}><td><b>{{ cl.key }}</b></td><td>{{ cl.value }}</td><td><span class="chip {{ 'obs' if cl.status in ('corroborated','observed_single_source') else 'una' }}">{{ cl.status.replace('_',' ')|upper }}</span></td><td class="n">{{ (cl.confidence*100)|round|int }}%</td><td>{{ cl.conflict or cl.method }}</td><td class="src">{% for u in cl.sources %}<a href="{{ u }}">source {{ loop.index }}</a>{% if not loop.last %} · {% endif %}{% endfor %}</td></tr>{% endfor %}
+</tbody></table></div>
+{% if p.verification.independent_sources %}<h4>Independent source hosts</h4><p class="src">{{ p.verification.independent_sources|join(' · ') }}</p>{% endif %}
+{% if p.verification.conflicts %}<h4>Conflicts detected</h4><div class="tw"><table><thead><tr><th>Type</th><th>Claim</th><th>What disagreed</th></tr></thead><tbody>{% for x in p.verification.conflicts %}<tr><td>{{ x.type }}</td><td>{{ x.claim }}</td><td>{{ x.detail }}</td></tr>{% endfor %}</tbody></table></div>{% endif %}
+{% endif %}
+
+{% if p.diagnostics %}
+<h3>Formula glossary</h3>
+<p class="note">These diagnostics make the report deeper without implying access to private analytics. All are deterministic calculations over the stated observed sample.</p>
+<div class="tw"><table><thead><tr><th style="width:22%">Metric</th><th style="width:36%">Formula</th><th>Permitted interpretation</th></tr></thead><tbody>
+{% for f in p.diagnostics.formula_glossary %}<tr><td><b>{{ f.metric }}</b></td><td class="formula">{{ f.formula }}</td><td>{{ f.use }}</td></tr>{% endfor %}
+</tbody></table></div>
+
+<h3>Source independence</h3>
+<div class="grid g3">
+  <div class="card"><div class="lbl">Distinct source hosts</div><div class="big">{{ p.diagnostics.source_hosts }}</div><div class="sm">across attributed accounts and search evidence</div></div>
+  <div class="card"><div class="lbl">Independent off-network hosts</div><div class="big">{{ p.diagnostics.independent_hosts }}</div><div class="sm">not the creator's attributed account set or a social platform</div></div>
+  <div class="card"><div class="lbl">Research completeness</div><div class="big">{{ p.diagnostics.evidence_score }}/100</div><div class="sm">coverage, never a quality or investment score</div></div>
+</div>
+<p class="src">{{ p.diagnostics.source_read }}</p>
+{% endif %}
+
+<h3>Not obtainable</h3>
+<div class="tw"><table><thead><tr><th style="width:30%">Data</th><th style="width:30%">Why</th><th>How you could get it</th></tr></thead><tbody>
+{% for u in a.unavailable %}<tr><td>{{ u.data }}</td><td>{{ u.why }}</td><td>{{ u.how }}</td></tr>{% endfor %}
+</tbody></table></div>
+
+<h3>Sources collected</h3>
+<ul class="t">
+{% for acc in p.raw.accounts %}<li><a href="{{ acc.url }}">{{ acc.url }}</a> — {{ acc.platform }} · {{ acc.raw.get('identity_role', 'candidate').replace('_',' ') }} · {{ acc.raw.get('identity_status', 'unreviewed') }}{% if acc.followers %}, {{ "{:,}".format(acc.followers) }} followers{% endif %}{% if acc.raw.get('analysis_eligible') is false %} <span class="chip una">EXCLUDED FROM ANALYSIS</span>{% endif %}{% if acc.errors %} <span style="color:var(--warn)">({{ acc.errors|join('; ') }})</span>{% endif %}</li>{% endfor %}
+</ul>
+
+<h4>Signals that fired</h4>
+<div>{% for sg in a.signals_fired %}<span class="tag">{{ sg }}</span>{% endfor %}</div>
+
+<h4>Compliance</h4>
+<p class="note">Generated only from information the subject published publicly, or that third-party media and databases published about them. No account was logged into, no authentication was bypassed, no CAPTCHA was solved, and robots.txt was honoured for every general web request. Login-walled data is either supplied by a human analyst or left explicitly unavailable — it is never fabricated. Figures were captured at generation time and will drift; re-generate before contracting.</p>
+</section>

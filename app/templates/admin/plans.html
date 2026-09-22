@@ -1,0 +1,25 @@
+{% extends "admin/_base.html" %}{% block admin %}
+<h1>Plans</h1>
+<p class="sub">Prices are live — changing one here takes effect immediately, no deploy.
+{% if not razorpay_ready %}<br><span class="badge err">Razorpay not configured</span> — plans cannot be billed until keys are set.{% endif %}</p>
+{% for p in plans %}
+<div class="card">
+  <form method="post" action="/admin/plans/{{ p.code }}">
+    <p style="margin:0 0 10px"><b>{{ p.code }}</b>
+      {% if p.razorpay_plan_id %}<span class="badge ok">synced</span>
+      {% elif p.price_inr > 0 %}<span class="badge warn">not synced to Razorpay yet</span>{% endif %}</p>
+    <div class="grid2">
+      <label>Name<input type="text" name="name" value="{{ p.name }}"></label>
+      <label>Price ₹/month<input type="number" name="price_inr" value="{{ p.price_inr }}"></label>
+      <label>Reports/month <span class="h">0 = unlimited</span><input type="number" name="reports_per_month" value="{{ p.reports_per_month }}"></label>
+      <label>Seats<input type="number" name="seats" value="{{ p.seats }}"></label>
+      <label>Max cohort size<input type="number" name="max_cohort_size" value="{{ p.max_cohort_size }}"></label>
+      <label style="display:flex;align-items:center;gap:8px;margin-top:24px">
+        <input type="checkbox" name="active" value="1" {% if p.active %}checked{% endif %} style="width:auto"> Active</label>
+    </div>
+    <label>Blurb<textarea name="blurb">{{ p.blurb }}</textarea></label>
+    <div style="margin-top:12px"><button type="submit">Save</button></div>
+  </form>
+</div>
+{% endfor %}
+{% endblock %}

@@ -1,0 +1,108 @@
+CREATOR INTELLIGENCE ENGINE
+===========================
+
+
+!! DO THIS FIRST - IT SAVES TEN MINUTES OF CONFUSION !!
+
+Windows marks everything that arrives from the internet as untrusted, and will
+refuse to run START.bat with a message like:
+
+    "These files can't be opened - your Internet security settings
+     prevented one or more files from being opened."
+
+Fix it in three steps, BEFORE you extract:
+
+  1. Move the .zip to a simple folder such as  C:\creator-intel
+     Do NOT run it from AppData, Program Files, OneDrive, Dropbox or
+     from inside the zip preview window. Those all cause problems.
+
+  2. Right-click the .zip file  ->  Properties  ->  tick "Unblock"  ->  OK
+     This clears the flag from every file inside it at once.
+
+  3. Right-click the .zip  ->  "Extract All..."  ->  extract it.
+
+Already extracted and now stuck? Open PowerShell and run this once, with the
+path changed to wherever your folder actually is:
+
+     Get-ChildItem 'C:\creator-intel' -Recurse | Unblock-File
+
+
+---------------------------------------------------------------------------
+
+WINDOWS - once unblocked, double-click:
+
+   START.bat    That is the whole thing. It installs everything it needs
+                on the first run - the Python environment, the libraries,
+                and a headless browser so no API key is required for
+                Instagram and YouTube - then opens the app in your browser
+                already signed in.
+
+                First run: about 200 MB and 2-4 minutes, ONCE.
+                Every run after that: about 5 seconds. The browser is
+                never downloaded twice - a stamp file records that it
+                is already there.
+
+                Reports do not pile up either. Old ones are pruned
+                automatically, and Settings has usage plus a Clear button.
+
+
+The other files are only there if you want them:
+
+   DEMO.bat     Five sample reports from bundled data, no internet needed.
+   TEST.bat     The engine's 55 self-tests, no internet needed.
+   ENABLE-BROWSER.bat
+                Only needed if the browser download failed during START.bat.
+
+
+MAC / LINUX - in a terminal, from this folder:
+
+   ./start.sh   (same as START.bat)
+   ./demo.sh    (same as DEMO.bat)
+
+   If it refuses to run:  chmod +x start.sh demo.sh
+
+
+---------------------------------------------------------------------------
+
+IF YOUR COMPANY BLOCKS .bat FILES ENTIRELY
+
+Open PowerShell in this folder (Shift + right-click in the folder ->
+"Open PowerShell window here") and run these five lines instead:
+
+   python -m venv .venv
+   .\.venv\Scripts\Activate.ps1
+   pip install -r requirements-dev.txt
+   python tools\bootstrap.py
+   python -m uvicorn app.main:app --port 8000
+
+The fourth line prints your API key. Open http://localhost:8000 and paste it.
+
+If PowerShell refuses to run the activate line, run this once in the same
+window and try again:
+
+   Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+
+
+---------------------------------------------------------------------------
+
+WHAT YOU NEED INSTALLED
+
+   Python 3.10 or newer.  https://www.python.org/downloads/
+   On Windows, tick "Add python.exe to PATH" during installation.
+   Nothing else - the launcher handles the rest.
+
+
+ONCE IT IS RUNNING
+
+   Paste one creator link for a single report.
+   Paste several links, one per line, for a cohort report comparing them.
+
+   Your private API key is generated on first run and saved in the .env
+   file. The launcher signs you in automatically, so you rarely need it.
+
+
+MORE DETAIL
+
+   QUICKSTART.md   step-by-step walkthrough and troubleshooting
+   README.md       architecture, how the engine works, deployment
+   LEGAL.md        compliance posture - read before launching commercially

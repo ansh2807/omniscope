@@ -1,0 +1,865 @@
+{# Reusable creator body. `p` = ReportPayload, `a` = audience, `pre` = anchor prefix. #}
+{% set c = p.content %}{% set f = p.funnel %}{% set s = p.seo %}{% set ov = p.overview %}
+{% set cm = p.comments %}{% set br = p.brand %}{% set gr = p.growth %}{% set dx = p.diagnostics %}
+{% set vr = p.verification %}{% set ag = p.agency if p.agency else none %}
+{% macro claim_chip(x) -%}
+  {% if x.status.value == 'observed' %}<span class="chip obs">OBSERVED</span>
+  {% elif x.status.value == 'calculated' %}<span class="chip obs">CALCULATED</span>
+  {% elif x.status.value == 'unavailable' %}<span class="chip una">UNAVAILABLE</span>
+  {% else %}<span class="chip est">MODELLED {{ (x.confidence*100)|round|int }}%</span>{% endif %}
+{%- endmacro %}
+{% macro agency_chip(m) -%}
+  {% if m and m.status == 'observed' %}<span class="chip obs">OBSERVED</span>
+  {% elif m and m.status == 'calculated' %}<span class="chip obs">CALCULATED {{ (m.confidence*100)|round|int }}%</span>
+  {% elif m and m.status == 'unavailable' %}<span class="chip una">UNAVAILABLE</span>
+  {% elif m %}<span class="chip est">MODELLED {{ (m.confidence*100)|round|int }}%</span>
+  {% else %}<span class="chip una">UNAVAILABLE</span>{% endif %}
+{%- endmacro %}
+{% macro agency_value(m) -%}
+  {% if not m or m.status == 'unavailable' %}Unavailable
+  {% elif m.value is mapping %}
+    {% if m.value.score is defined %}{{ m.value.score }}{% if m.value.label %} · {{ m.value.label }}{% endif %}
+    {% elif m.value.risk_band is defined %}{{ m.value.risk_band }}{% if m.value.risk_score_range %} ({{ m.value.risk_score_range[0] }}–{{ m.value.risk_score_range[1] }}){% endif %}
+    {% elif m.value.per_placement_range is defined %}{{ "{:,}".format(m.value.per_placement_range[0]) }}–{{ "{:,}".format(m.value.per_placement_range[1]) }} public views
+    {% elif m.value.change_pct is defined %}{{ m.value.change_pct }}% vs catalogue{% if m.value.direction %} · {{ m.value.direction }}{% endif %}
+    {% elif m.value.named_brands is defined %}{{ m.value.named_brands|join(', ') if m.value.named_brands else (m.value.summary or 'Markers observed') }}
+    {% elif m.value.exact_overlap_status is defined %}Exact overlap unavailable · topic affinity reported separately
+    {% elif m.value.topics is defined %}{{ m.value.topics[:5]|map(attribute='topic')|join(' · ') if m.value.topics else 'See detail' }}
+    {% else %}See detail below{% endif %}
+  {% elif m.value is sequence and m.value and m.value[0] is mapping %}
+    {% if m.value[0].value is defined %}{{ m.value|map(attribute='value')|join(' · ') }}
+    {% elif m.value[0].handle is defined %}{{ m.value|map(attribute='handle')|join(' · ') }}
+    {% elif m.value[0].insight is defined %}{{ m.value|length }} evidence-qualified insight(s)
+    {% else %}{{ m.value|length }} item(s){% endif %}
+  {% else %}{{ m.value }}{% endif %}
+{%- endmacro %}
+{% macro dist_value(x, prefix='') -%}
+  {% if x.as_pct() %}{% for k,v in x.as_pct().items() %}{{ prefix }}{{ k.replace('_',' ') }} {{ v }}%{% if not loop.last %} · {% endif %}{% endfor %}
+  {% else %}Unavailable{% endif %}
+{%- endmacro %}
+{% if p.desk %}
+<section id="{{ pre }}desk">
+<h2>00 — Marketing desk</h2>
+<p class="lede">{{ p.desk.one_liner }}</p>
+<p class="note">{{ p.desk.methodology }}</p>
+<div class="grid g2">
+  <div class="card"><div class="lbl">This week's job</div><p>{{ p.desk.job }}</p></div>
+  <div class="card"><div class="lbl">Posture</div><p>{{ p.desk.posture }}</p>
+    <div class="sm"><span class="chip est">modelled from public fields</span></div></div>
+</div>
+{% if p.desk.narrative %}
+<p class="lede">{{ p.desk.narrative }}</p>
+<p class="note">Optional prose restated from filled cells. Numbers not already on this desk were rejected.</p>
+{% endif %}
+<h3>Eight basic marketing needs</h3>
+<div class="grid g2">
+{% for n in p.desk.needs %}
+<div class="card">
+  <div class="lbl">{{ n.title }}
+    <span class="chip {{ 'obs' if n.status in ('observed','calculated') else ('una' if n.status=='unavailable' else 'est') }}">{{ n.status }}</span>
+  </div>
+  <p>{{ n.meaning }}</p>
+  <p class="note">{{ n.evidence }}</p>
+  <p><b>Next</b> {{ n.next_step }}</p>
+</div>
+{% endfor %}
+</div>
+{% if p.desk.frameworks %}
+<h3>Frameworks filled from public evidence</h3>
+{% for fw in p.desk.frameworks %}
+<h4>{{ fw.name }}</h4>
+<table>
+<thead><tr><th>Slot</th><th>Fill</th><th></th></tr></thead>
+<tbody>
+{% for c in fw.cells %}
+<tr>
+  <td><b>{{ c.slot }}</b></td>
+  <td>{{ c.fill }}{% if c.note %}<div class="note">{{ c.note }}</div>{% endif %}</td>
+  <td><span class="chip {{ 'obs' if c.status in ('observed','calculated') else ('una' if c.status=='unavailable' else 'est') }}">{{ c.status }}</span></td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+{% endfor %}
+{% endif %}
+{% if p.desk.playbooks %}
+<h3>Playbooks from observed surfaces</h3>
+<p class="note">A playbook appears only when a collected surface triggered it. It is a template, not a forecast.</p>
+{% for pb in p.desk.playbooks %}
+<div class="card">
+  <div class="lbl">{{ pb.title }}
+    <span class="chip {{ 'obs' if pb.status in ('observed','calculated') else ('una' if pb.status=='unavailable' else 'est') }}">{{ pb.status }}</span>
+  </div>
+  <p>{{ pb.why }}</p>
+  <ul>{% for step in pb.steps %}<li>{{ step }}</li>{% endfor %}</ul>
+  {% if pb.cannot %}<p class="note">{{ pb.cannot }}</p>{% endif %}
+</div>
+{% endfor %}
+{% endif %}
+{% if p.desk.week_plan %}
+<h3>This week</h3>
+<ul>{% for step in p.desk.week_plan %}<li>{{ step }}</li>{% endfor %}</ul>
+{% endif %}
+{% if p.desk.cannot_know %}
+<p class="note"><b>Will not be invented:</b> {{ p.desk.cannot_know|join(' · ') }}</p>
+{% endif %}
+</section>
+{% endif %}
+<section id="{{ pre }}exec">
+<h2>01 — Executive Summary</h2>
+<div class="lede">{{ a.one_liner }}</div>
+<div class="grid g4" style="margin-top:18px">
+{% for st in p.headline_stats %}
+  <div class="card"><div class="lbl">{{ st.label }}</div><div class="big">{{ st.value }}</div><div class="sm">{{ st.note }}</div></div>
+{% endfor %}
+</div>
+<h3>Executive dashboard</h3>
+<div class="grid g4">
+  <div class="card"><div class="lbl">Life-stage model confidence</div><div class="big">{{ (a.overall_confidence*100)|round|int }}%</div><div class="sm">across {{ a.signals_fired|length }} fired signals</div></div>
+  <div class="card"><div class="lbl">Brand evidence rubric</div><div class="big">{{ br.total }}<span style="font-size:15px;color:var(--dim)">/50</span></div><div class="sm">internal rubric · not campaign performance</div></div>
+  <div class="card"><div class="lbl">Funnel evidence rubric</div><div class="big">{{ f.total }}<span style="font-size:15px;color:var(--dim)">/70</span></div><div class="sm">internal rubric · not conversion</div></div>
+  <div class="card"><div class="lbl">Growth trend</div><div class="big" style="font-size:20px">{{ gr.trend or 'not measurable' }}</div><div class="sm">{{ gr.trend_note[:70] ~ '…' if gr.trend_note else gr.reason[:70] }}</div></div>
+</div>
+<div class="grid g2">
+  <div class="chartbox" style="margin:0"><p class="cap">Brand pillars</p><div class="cw"><canvas id="{{ pre }}cBrand"></canvas></div></div>
+  {% if a.age.as_pct() and a.city_tier.as_pct() %}<div class="chartbox" style="margin:0"><p class="cap">Audience heatmap — age against observed city tier</p><div class="cw"><canvas id="{{ pre }}cHeat"></canvas></div></div>
+  {% else %}<div class="card"><div class="lbl">Evidence coverage</div><div class="big" style="font-size:20px">No false precision</div><div class="sm">Private city-tier, income, gender and device splits remain unavailable unless first-party analytics are supplied.</div></div>{% endif %}
+</div>
+{% if dx %}
+<h3>Research confidence and decision risk</h3>
+<div class="grid g4">
+  <div class="card"><div class="lbl">Research completeness</div><div class="big">{{ dx.evidence_score }}<span style="font-size:15px;color:var(--dim)">/100</span></div><div class="sm">coverage index, not creator quality</div></div>
+  <div class="card"><div class="lbl">Evidence states</div><div class="big">{{ dx.evidence_counts.observed + dx.evidence_counts.calculated }}</div><div class="sm">of {{ dx.evidence_dimensions|length }} dimensions observed or calculated</div></div>
+  <div class="card"><div class="lbl">View concentration</div><div class="big">{{ dx.view_gini if dx.view_gini is not none else '—' }}</div><div class="sm">Gini over {{ dx.content_n }} items · top fifth {{ (dx.top20_share|string ~ '%') if dx.top20_share is not none else 'unavailable' }}</div></div>
+  <div class="card"><div class="lbl">Effective platforms</div><div class="big">{{ dx.effective_platforms if dx.effective_platforms is not none else '—' }}</div><div class="sm">from HHI {{ dx.platform_hhi if dx.platform_hhi is not none else 'unavailable' }} · {{ dx.platform_concentration }}</div></div>
+</div>
+<div class="grid g2">
+  <div class="chartbox" style="margin:0"><p class="cap">Evidence-state count across decision dimensions</p><div class="cw s"><canvas id="{{ pre }}cEvidence"></canvas></div></div>
+  <div class="card"><h4>How to read the score</h4><p class="sm">{{ dx.evidence_read }}</p><p class="src">Formula: 100 × (observed + 0.85 × calculated + 0.25 × modelled) / assessed dimensions. It rewards research completeness only.</p></div>
+</div>
+{% endif %}
+{% if vr %}
+<h3>Identity and claim verification</h3>
+<div class="grid g4">
+  <div class="card"><div class="lbl">Identity status</div><div class="big" style="font-size:20px">{{ vr.identity_status|upper }}</div><div class="sm">{{ (vr.identity_score*100)|round|int }}% evidence score</div></div>
+  <div class="card"><div class="lbl">Attributed ecosystem</div><div class="big">{{ vr.accepted_accounts }}</div><div class="sm">{{ vr.get('primary_accounts', vr.accepted_accounts) }} primary · {{ vr.get('related_accounts', 0) }} related · {{ vr.withheld_accounts }} excluded</div></div>
+  <div class="card"><div class="lbl">Corroborated claims</div><div class="big">{{ vr.claim_counts.get('corroborated', 0) }}</div><div class="sm">{{ vr.claim_counts.get('conflicted', 0) }} conflicted</div></div>
+  <div class="card"><div class="lbl">Independent hosts</div><div class="big">{{ vr.independent_source_count }}</div><div class="sm">{{ vr.provider_count }} search providers · {{ vr.query_count }} query purposes</div></div>
+</div>
+{% if vr.conflicts %}<div class="call risk"><b>{{ vr.conflicts|length }} evidence conflict{{ '' if vr.conflicts|length == 1 else 's' }}</b><p>Conflicted values are withheld from conclusions. Review the verification ledger in the appendix before using this report for a decision.</p></div>{% endif %}
+{% endif %}
+{% if p.media_buy %}
+<h3>Media-buy decision scorecard</h3>
+<div class="grid g4">
+  <div class="card"><div class="lbl">Verdict</div><div class="big" style="font-size:20px">{{ p.media_buy.label }}</div><div class="sm">{{ p.media_buy.confidence_note }}</div></div>
+  <div class="card"><div class="lbl">Fit score</div><div class="big">{% if p.media_buy.fit_score is not none %}{{ p.media_buy.fit_score }}{% else %}—{% endif %}</div><div class="sm">0–100 public diligence index</div></div>
+  <div class="card"><div class="lbl">Evidence coverage</div><div class="big">{{ p.media_buy.coverage_pct }}%</div><div class="sm">share of scorecard weight available</div></div>
+  <div class="card"><div class="lbl">Recommendation code</div><div class="big" style="font-size:18px">{{ p.media_buy.verdict|upper }}</div><div class="sm">prioritize · pilot · hold · pass</div></div>
+</div>
+<div class="tw"><table><thead><tr><th>Component</th><th>Score</th><th>Weight</th><th>Status</th><th>Note</th></tr></thead><tbody>
+{% for c in p.media_buy.components %}<tr>
+<td><b>{{ c.name }}</b></td>
+<td class="n">{% if c.score is not none %}{{ c.score }}{% else %}—{% endif %}</td>
+<td class="n">{{ c.weight }}</td>
+<td><span class="chip {{ 'obs' if c.status in ('observed','calculated') else ('est' if c.status == 'modelled' else 'una') }}">{{ c.status|upper }}</span></td>
+<td>{{ c.note }}</td>
+</tr>{% endfor %}
+</tbody></table></div>
+{% if p.media_buy.reasons %}<h4>Why this leans positive</h4><ul class="t">{% for r in p.media_buy.reasons %}<li>{{ r }}</li>{% endfor %}</ul>{% endif %}
+{% if p.media_buy.risks %}<h4>Diligence gaps / risks</h4><ul class="t">{% for r in p.media_buy.risks %}<li>{{ r }}</li>{% endfor %}</ul>{% endif %}
+{% if p.media_buy.next_steps %}<h4>Next steps for the brand team</h4><ul class="t">{% for r in p.media_buy.next_steps %}<li>{{ r }}</li>{% endfor %}</ul>{% endif %}
+<p class="src">{{ p.media_buy.method }}</p>
+{% endif %}
+{% if a.callouts %}<h3>The findings that matter</h3>
+{% for co in a.callouts %}<div class="call {{ co.kind }}"><b>{{ loop.index }} · {{ co.title }}</b><p>{{ co.body }}</p></div>{% endfor %}
+{% endif %}
+</section>
+
+<section id="{{ pre }}overview">
+<h2>02 — Creator Overview</h2>
+<div class="lede">Who this person is, from their own published surfaces.</div>
+<div class="tw"><table><tbody>
+{% if ov and ov.positioning %}<tr><td style="width:20%"><b>Positioning</b></td><td>{{ ov.positioning }} <span class="chip obs">OBSERVED</span></td></tr>{% endif %}
+{% if ov and ov.credentials %}<tr><td><b>Credentials</b></td><td>{{ ov.credentials|join(' · ') }}{% if ov.verified %} · verified account{% endif %} <span class="chip obs">OBSERVED</span></td></tr>{% endif %}
+{% if ov and ov.content_pillars %}<tr><td><b>Content pillars</b></td><td>{{ ov.content_pillars|join(' · ') }}<div class="src">Unlabelled names are story highlights the creator published. Other pillars are labelled by source — recurring title words, Wikidata field/genre, or a Wikipedia category. They are not an audience-interest model.</div></td></tr>{% endif %}
+{% if ov and ov.product_stack %}<tr><td><b>Product stack</b></td><td>{{ ov.product_stack|join(' · ') }} <span class="chip obs">OBSERVED</span></td></tr>{% endif %}
+{% if ov and ov.format_range %}<tr><td><b>Format range</b></td><td>{{ ov.format_range }}</td></tr>{% endif %}
+{% if ov and ov.press %}<tr><td><b>Press &amp; stage</b></td><td>{{ ov.press|join(' · ') }}<div class="src">Self-declared in channel metadata unless a third-party source is cited in the appendix.</div></td></tr>{% endif %}
+{% if ov and ov.base_location %}<tr><td><b>Base</b></td><td>{{ ov.base_location }}</td></tr>{% endif %}
+{% if ov and ov.portrait_url %}<tr><td><b>Portrait</b></td><td><a href="{{ ov.portrait_url }}">Wikimedia image</a><div class="src">{% if ov.portrait_source == 'wikipedia_summary' %}Wikipedia page image. Not an Instagram avatar.{% elif ov.portrait_source == 'wikidata_p18' %}Wikidata Commons image (P18). Not an Instagram avatar.{% else %}Official Wikimedia image. Not an Instagram avatar.{% endif %}</div></td></tr>{% endif %}
+</tbody></table></div>
+</section>
+
+<section id="{{ pre }}platforms">
+<h2>03 — Cross-Platform Presence</h2>
+<div class="lede">Everything found, and everything looked for and not found.</div>
+<div class="tw"><table>
+<thead><tr><th>Platform</th><th>Account role</th><th>Handle</th><th>Followers</th><th>Items</th><th>Collected via</th><th>Note</th></tr></thead><tbody>
+{% for r in p.platform_matrix %}
+<tr{% if r.status in ('not found', 'rejected', 'candidate') %} class="dim"{% endif %}>
+<td><b>{{ r.platform }}</b></td>
+<td>{{ r.role }}</td>
+<td>{% if r.url %}<a href="{{ r.url }}">{{ r.handle }}</a>{% else %}{{ r.handle }}{% endif %}</td>
+<td class="n">{{ r.followers }}</td><td class="n">{{ r['items'] }}</td><td class="src">{{ r.tier }}</td><td>{{ r.note }}</td></tr>
+{% endfor %}
+</tbody></table></div>
+<p class="src">Counts were captured from the attributed public source or supplied input; cache, capture time and source scope are disclosed in the appendix. <span class="chip obs">OBSERVED</span></p>
+{% if vr and vr.accounts %}
+<h3>Cross-source identity graph</h3>
+<p class="note">Identity scores combine named evidence; follower size is a consistency check only and never establishes ownership.</p>
+<div class="tw"><table><thead><tr><th>Surface</th><th>Relationship</th><th>Status</th><th>Identity score</th><th>Evidence</th><th>Conflicts / gaps</th></tr></thead><tbody>
+{% for row in vr.accounts %}<tr{% if row.status in ('withheld','conflicted') %} class="dim"{% endif %}><td><b>{{ row.platform }}</b><div class="src"><a href="{{ row.url }}">{{ row.url }}</a></div></td><td>{{ row.get('role', 'candidate').replace('_',' ')|title }}</td><td><span class="chip {{ 'obs' if row.status == 'accepted' else 'una' }}">{{ row.status|upper }}</span><div class="src">{{ row.source_tier }}</div></td><td class="n">{{ (row.score*100)|round|int }}%</td><td>{{ row.signals|join(' · ') if row.signals else 'No positive corroboration recorded' }}</td><td>{{ row.conflicts|join(' · ') if row.conflicts else 'None detected' }}</td></tr>{% endfor %}
+</tbody></table></div>
+{% endif %}
+{% if dx and dx.platform_hhi is not none %}
+<h3>Distribution concentration <span class="chip obs">CALCULATED</span></h3>
+<div class="call {{ 'risk' if dx.platform_hhi >= 0.5 else '' }}"><b>{{ dx.platform_concentration|title }} platform concentration</b><p>HHI {{ dx.platform_hhi }}; effective platform count {{ dx.effective_platforms }}. This uses summed public account follows, so a person following on two platforms appears twice.</p></div>
+<div class="tw"><table><thead><tr><th>Platform</th><th>Public follows</th><th>Share of summed follows</th><th>Implication</th></tr></thead><tbody>
+{% for row in dx.platform_shares %}<tr><td><b>{{ row.platform|title }}</b></td><td class="n">{{ "{:,}".format(row.followers) }}</td><td class="n">{{ row.share }}%</td><td>{{ 'Primary distribution dependency' if loop.first and row.share >= 60 else 'Supporting public surface' }}</td></tr>{% endfor %}
+</tbody></table></div>
+{% endif %}
+{% if p.raw.rejected %}
+<h4>Candidates considered and rejected</h4>
+<p class="note">A profile that lists a stranger's account is worse than one that lists
+nothing, so every discovered surface has to prove it belongs to the subject before it is
+recorded. These did not.</p>
+<div class="tw"><table><thead><tr><th style="width:12%">Platform</th><th style="width:30%">Candidate</th><th>Why it was rejected</th></tr></thead><tbody>
+{% for r in p.raw.rejected %}<tr class="dim"><td>{{ r.platform }}</td><td class="src">{{ r.url }}</td><td>{{ r.reason }}</td></tr>{% endfor %}
+</tbody></table></div>
+{% endif %}
+{% if p.raw.warnings %}<div class="call correction"><b>Collection warnings</b><p>{{ p.raw.warnings|join(' ') }}</p></div>{% endif %}
+</section>
+
+<section id="{{ pre }}audience">
+<h2>04 — Audience Intelligence</h2>
+<div class="lede">Who is on the other side of the screen, and how confident we are about each claim.</div>
+<div class="grid g2">
+  {% if a.age.as_pct() %}<div class="chartbox" style="margin:0"><p class="cap">Likely/observed age — {{ claim_chip(a.age) }}</p><div class="cw"><canvas id="{{ pre }}cAge"></canvas></div></div>{% endif %}
+  {% if a.format_mix.as_pct() %}<div class="chartbox" style="margin:0"><p class="cap">Published output format — not audience consumption {{ claim_chip(a.format_mix) }}</p><div class="cw"><canvas id="{{ pre }}cFmt"></canvas></div></div>{% endif %}
+</div>
+<div class="tw"><table>
+<thead><tr><th style="width:14%">Dimension</th><th style="width:26%">Result</th><th>Reasoning and method</th><th style="width:13%">Status</th></tr></thead><tbody>
+<tr><td><b>Age / life stage</b></td><td>{{ dist_value(a.age) }}</td><td>{{ a.age.reasoning }}</td><td>{{ claim_chip(a.age) }}</td></tr>
+<tr><td><b>Gender</b></td><td>{{ dist_value(a.gender) }}</td><td>{{ a.gender.reasoning }}</td><td>{{ claim_chip(a.gender) }}</td></tr>
+{% for e in a.country_split %}<tr><td><b>{{ e.key.replace('_',' ')|title }}</b></td><td>{{ e.value }}</td><td>{{ e.reasoning }}</td><td>{{ claim_chip(e) }}</td></tr>{% endfor %}
+<tr><td><b>City tier</b></td><td>{{ dist_value(a.city_tier) }}</td><td>{{ a.city_tier.reasoning }}</td><td>{{ claim_chip(a.city_tier) }}</td></tr>
+{% if a.top_cities %}<tr><td><b>Content / audience cities</b></td><td>{{ a.top_cities.value|join(', ') if a.top_cities.value else 'Unavailable' }}</td><td>{{ a.top_cities.reasoning }}</td><td>{{ claim_chip(a.top_cities) }}</td></tr>{% endif %}
+{% if a.education %}<tr><td><b>Education relevance</b></td><td>{{ a.education.value }}</td><td>{{ a.education.reasoning }}</td><td>{{ claim_chip(a.education) }}</td></tr>{% endif %}
+{% if a.career_stage %}<tr><td><b>Career-stage relevance</b></td><td>{{ a.career_stage.value }}</td><td>{{ a.career_stage.reasoning }}</td><td>{{ claim_chip(a.career_stage) }}</td></tr>{% endif %}
+<tr><td><b>Income</b></td><td>{{ dist_value(a.income, '₹') }}</td><td>{{ a.income.reasoning }}</td><td>{{ claim_chip(a.income) }}</td></tr>
+{% if a.language %}<tr><td><b>Language</b></td><td>{{ a.language.value }}</td><td>{{ a.language.reasoning }}</td><td>{{ claim_chip(a.language) }}</td></tr>{% endif %}
+<tr><td><b>Device</b></td><td>{{ dist_value(a.device) }}</td><td>{{ a.device.reasoning }}</td><td>{{ claim_chip(a.device) }}</td></tr>
+<tr><td><b>Audience temperature</b></td><td>{{ dist_value(a.temperature) }}</td><td>{{ a.temperature.reasoning }}</td><td>{{ claim_chip(a.temperature) }}</td></tr>
+</tbody></table></div>
+
+<h3>Private attributes the engine will not manufacture</h3>
+<p class="note">Occupation percentages, education percentages, career-level percentages, relationship depth and total media consumption are private audience attributes. They stay <span class="chip una">UNAVAILABLE</span> until first-party analytics or survey data are supplied.</p>
+<div class="tw"><table><thead><tr><th style="width:18%">Dimension</th><th style="width:34%">Estimate</th><th>Reasoning</th><th style="width:9%">Conf.</th></tr></thead><tbody>
+{% if a.states %}<tr><td><b>Content-referenced states</b></td><td>{{ a.states.value|join(', ') if a.states.value else 'Unavailable' }}</td><td>{{ a.states.reasoning }}</td><td>{{ claim_chip(a.states) }}</td></tr>{% endif %}
+{% if a.english_proficiency %}<tr><td><b>English proficiency</b></td><td>{{ a.english_proficiency.value }}</td><td>{{ a.english_proficiency.reasoning }}</td><td>{{ claim_chip(a.english_proficiency) }}</td></tr>{% endif %}
+{% if a.regional_language %}<tr><td><b>Regional language</b></td><td>{{ a.regional_language.value }}</td><td>{{ a.regional_language.reasoning }}</td><td>{{ claim_chip(a.regional_language) }}</td></tr>{% endif %}
+</tbody></table></div>
+
+<h3>Creator content topics, ranked</h3>
+{% if a.interests %}
+<div class="chartbox"><p class="cap">Share of classified topic signals across bio, keywords and collected titles—not audience interest percentages <span class="chip obs">CALCULATED</span></p><div class="cw t"><canvas id="{{ pre }}cInt"></canvas></div></div>
+{% else %}<p class="note">Not enough topical signal in the public corpus to rank interests.</p>{% endif %}
+
+<h3>Content-need hypotheses to test</h3>
+<div class="tw"><table><thead><tr><th style="width:20%">Dimension</th><th>Profile</th></tr></thead><tbody>
+{% for k, v in a.psychographics.items() %}<tr><td><b>{{ k.replace('_',' ')|title }}</b></td><td>{{ v }}</td></tr>{% endfor %}
+</tbody></table></div>
+{% if a.vocabulary %}<h4>Vocabulary observed in collected content metadata</h4>
+<div>{% for w in a.vocabulary %}<span class="tag">{{ w }}</span>{% endfor %}</div>{% endif %}
+
+{% if a.behaviours %}<h3>Measured behaviour</h3>
+<div class="tw"><table><thead><tr><th style="width:20%">Behaviour</th><th style="width:24%">Measurement</th><th>Why it matters</th></tr></thead><tbody>
+{% for b in a.behaviours %}<tr><td><b>{{ b.label }}</b></td><td>{{ b.value }}</td><td>{{ b.note }}</td></tr>{% endfor %}
+</tbody></table></div>{% endif %}
+{% if dx %}
+<h3>Evidence ledger: what is known versus still private</h3>
+<div class="tw"><table><thead><tr><th style="width:22%">Decision dimension</th><th style="width:12%">State</th><th>Current evidence</th><th>What unlocks the next level</th></tr></thead><tbody>
+{% for e in dx.evidence_dimensions %}<tr><td><b>{{ e.dimension }}</b></td><td><span class="chip {{ 'obs' if e.status in ('observed','calculated') else ('est' if e.status == 'modelled' else 'una') }}">{{ e.status|upper }}</span></td><td>{{ e.evidence }}</td><td>{{ e.unlock if e.status != 'observed' else 'No additional source required for the stated claim.' }}</td></tr>{% endfor %}
+</tbody></table></div>
+{% if dx.topic_read %}<div class="call"><b>Content portfolio breadth</b><p>{{ dx.topic_read }}</p></div>{% endif %}
+{% endif %}
+</section>
+
+
+{% if ag %}
+<section id="{{ pre }}agency">
+<h2>05 — Agency Buying Desk</h2>
+<div class="lede">Marketing-company diligence layer: quality screens, reach bands, lookalikes, contacts, collaborations and influence — every claim statused, never fabricated.</div>
+<p class="note">Methodology {{ ag.methodology_version }}. Observed and calculated values use public attributable evidence. Modelled values are transparent proxies. Unavailable means the public web cannot support the claim.</p>
+<div class="grid g4" style="margin-top:18px">
+  {% set aq = ag.audience_quality %}{% set ff = ag.fake_follower_anomaly %}{% set er = ag.estimated_reach %}{% set inf = ag.influence_score %}
+  <div class="card"><div class="lbl">Audience quality</div><div class="big" style="font-size:22px">{{ agency_value(aq) }}</div><div class="sm">{{ agency_chip(aq) }}</div></div>
+  <div class="card"><div class="lbl">Fake-follower anomaly</div><div class="big" style="font-size:18px">{{ agency_value(ff) }}</div><div class="sm">{{ agency_chip(ff) }} — never a fake %</div></div>
+  <div class="card"><div class="lbl">Estimated reach</div><div class="big" style="font-size:18px">{{ agency_value(er) }}</div><div class="sm">{{ agency_chip(er) }}</div></div>
+  <div class="card"><div class="lbl">Influence score</div><div class="big" style="font-size:22px">{{ agency_value(inf) }}</div><div class="sm">{{ agency_chip(inf) }}</div></div>
+</div>
+
+<div class="tw"><table>
+<thead><tr><th style="width:16%">Metric</th><th style="width:28%">Result</th><th>Interpretation / method</th><th style="width:12%">Status</th></tr></thead><tbody>
+{% for key, label in [
+  ('audience_quality','Audience quality'),
+  ('demographics','Demographics'),
+  ('fake_follower_anomaly','Fake follower estimates'),
+  ('interests','Interests'),
+  ('engagement','Engagement'),
+  ('audience_overlap','Audience overlap'),
+  ('lookalike_creators','Lookalike creators'),
+  ('contact_details','Contact details'),
+  ('estimated_reach','Estimated reach'),
+  ('brand_collaborations','Brand collaborations'),
+  ('influence_score','Influence score'),
+  ('audience_insights','Audience insights'),
+  ('brand_affinity','Brand affinity'),
+  ('historical_performance','Historical performance')
+] %}
+{% set m = ag[key] %}
+<tr>
+<td><b>{{ label }}</b></td>
+<td>{{ agency_value(m) }}{% if m.denominator %}<div class="src">{{ m.denominator }}</div>{% endif %}</td>
+<td>{{ m.interpretation }}{% if m.formula %}<div class="src">{{ m.formula }}</div>{% endif %}
+{% if m.limitations %}<div class="src">Limit: {{ m.limitations|join(' — ') }}</div>{% endif %}
+{% if m.data_required and m.status == 'unavailable' %}<div class="src">Needs: {{ m.data_required|join(' — ') }}</div>{% endif %}</td>
+<td>{{ agency_chip(m) }}</td>
+</tr>
+{% endfor %}
+</tbody></table></div>
+
+{% set lk = ag.lookalike_creators %}
+{% if lk and lk.status != 'unavailable' and lk.value %}
+<h3>Lookalike creators <span class="chip est">TOPIC / STAGE AFFINITY</span></h3>
+<p class="note">Ranked by public content/topic affinity — not shared followers. Exact audience overlap stays unavailable without first-party exports.</p>
+<div class="tw"><table><thead><tr><th>Creator</th><th>Platform</th><th>Followers</th><th>Lookalike score</th><th>Coverage</th><th>Scope</th></tr></thead><tbody>
+{% for row in lk.value[:10] %}
+<tr>
+<td><b>{% if row.url %}<a href="{{ row.url }}">{{ row.display_name or row.handle }}</a>{% else %}{{ row.display_name or row.handle }}{% endif %}</b>
+<div class="src">@{{ row.handle }}</div></td>
+<td>{{ row.platform }}</td>
+<td class="n">{% if row.followers %}{{ "{:,}".format(row.followers) }}{% else %}?{% endif %}</td>
+<td class="n">{{ row.lookalike_score }}</td>
+<td class="n">{{ row.feature_coverage_pct }}%</td>
+<td class="src">{{ row.scope }}</td>
+</tr>
+{% endfor %}
+</tbody></table></div>
+{% endif %}
+
+{% set ct = ag.contact_details %}
+{% if ct and ct.status == 'observed' and ct.value %}
+<h3>Public contact details <span class="chip obs">OBSERVED</span></h3>
+<div class="tw"><table><thead><tr><th>Type</th><th>Value</th><th>Platform</th><th>Source</th></tr></thead><tbody>
+{% for row in ct.value %}
+<tr><td>{{ row.type }}</td><td><b>{{ row.value }}</b></td><td>{{ row.platform }}</td>
+<td class="src">{% if row.source_url %}<a href="{{ row.source_url }}">{{ row.source_url }}</a>{% else %}?{% endif %}</td></tr>
+{% endfor %}
+</tbody></table></div>
+{% endif %}
+
+{% set bc = ag.brand_collaborations %}
+{% if bc and bc.status != 'unavailable' and bc.value is mapping %}
+<h3>Brand collaborations {{ agency_chip(bc) }}</h3>
+{% if bc.value.named_brands %}<div>{% for b in bc.value.named_brands %}<span class="tag">{{ b }}</span>{% endfor %}</div>{% endif %}
+{% if bc.value.markers %}<p class="note">Markers: {{ bc.value.markers|join(' — ') }}</p>{% endif %}
+{% if bc.value.summary %}<p class="sm">{{ bc.value.summary }}</p>{% endif %}
+{% endif %}
+
+{% set ai = ag.audience_insights %}
+{% if ai and ai.status != 'unavailable' and ai.value %}
+<h3>Audience insights {{ agency_chip(ai) }}</h3>
+<div class="tw"><table><thead><tr><th>Insight</th><th>Value</th><th>Decision use</th><th>Status</th></tr></thead><tbody>
+{% for row in ai.value %}
+<tr><td><b>{{ row.insight }}</b></td>
+<td class="n">{% if row.value is not none %}{{ row.value }}{% if row.unit %} {{ row.unit }}{% endif %}{% else %}?{% endif %}</td>
+<td>{{ row.decision }}</td>
+<td><span class="chip {{ 'obs' if row.status in ('observed','calculated') else 'est' }}">{{ row.status|upper }}</span></td></tr>
+{% endfor %}
+</tbody></table></div>
+{% endif %}
+
+{% set ba = ag.brand_affinity %}
+{% if ba and ba.status != 'unavailable' %}
+<h3>Brand affinity {{ agency_chip(ba) }}</h3>
+<p>{{ ba.interpretation }}</p>
+{% if ba.value is mapping %}
+<div class="tw"><table><thead><tr><th>Signal</th><th>Detail</th></tr></thead><tbody>
+{% for k,v in ba.value.items() if k not in ('components',) %}
+<tr><td><b>{{ k.replace('_',' ')|title }}</b></td><td>{% if v is sequence and v and v is not string %}{{ v|join(', ') if v[0] is string else v }}{% else %}{{ v }}{% endif %}</td></tr>
+{% endfor %}
+</tbody></table></div>
+{% endif %}
+{% endif %}
+
+{% set hp = ag.historical_performance %}
+{% if hp and hp.status != 'unavailable' and hp.value is mapping %}
+<h3>Historical performance {{ agency_chip(hp) }}</h3>
+{% set hist_med = hp.value.historical_comparable_median_views if hp.value.historical_comparable_median_views is defined else hp.value.catalogue_median %}
+{% set cur_med = hp.value.current_comparable_median_views if hp.value.current_comparable_median_views is defined else hp.value.current_median %}
+<div class="grid g3">
+  <div class="card"><div class="lbl">Historical median</div><div class="big" style="font-size:22px">{% if hist_med is defined and hist_med is not none %}{{ "{:,}".format(hist_med) }}{% else %}—{% endif %}</div></div>
+  <div class="card"><div class="lbl">Current median</div><div class="big" style="font-size:22px">{% if cur_med is defined and cur_med is not none %}{{ "{:,}".format(cur_med) }}{% else %}—{% endif %}</div></div>
+  <div class="card"><div class="lbl">Change</div><div class="big" style="font-size:22px">{% if hp.value.change_pct is defined %}{{ hp.value.change_pct }}%{% else %}—{% endif %}</div><div class="sm">{{ hp.value.direction if hp.value.direction is defined else '' }}</div></div>
+</div>
+<p class="src">{{ hp.interpretation }}</p>
+{% endif %}
+
+{% set eng = ag.engagement %}
+{% if eng and eng.status == 'calculated' and eng.value is mapping %}
+<h3>Engagement (public counts) <span class="chip obs">CALCULATED</span></h3>
+<div class="grid g4">
+  {% if eng.value.median_views is defined %}<div class="card"><div class="lbl">Median views</div><div class="big" style="font-size:20px">{{ "{:,}".format(eng.value.median_views) if eng.value.median_views is not none else '?' }}</div></div>{% endif %}
+  {% if eng.value.median_likes is defined %}<div class="card"><div class="lbl">Median likes</div><div class="big" style="font-size:20px">{{ "{:,}".format(eng.value.median_likes) if eng.value.median_likes is not none else '?' }}</div></div>{% endif %}
+  {% if eng.value.median_comments is defined %}<div class="card"><div class="lbl">Median comments</div><div class="big" style="font-size:20px">{{ "{:,}".format(eng.value.median_comments) if eng.value.median_comments is not none else '?' }}</div></div>{% endif %}
+  {% if eng.value.like_rate_pct is defined %}<div class="card"><div class="lbl">Like / view</div><div class="big" style="font-size:20px">{% if eng.value.like_rate_pct is not none %}{{ eng.value.like_rate_pct }}%{% else %}?{% endif %}</div></div>{% endif %}
+</div>
+<p class="src">{{ eng.denominator }} — {{ eng.interpretation }}</p>
+{% endif %}
+</section>
+{% endif %}
+
+<section id="{{ pre }}content">
+<h2>06 — Content Analysis</h2>
+<div class="lede">Observed public content metrics and calculated associations, with sample and exposure limits stated.</div>
+{% if vr %}<p class="note">Analysis scope: {{ vr.get('primary_accounts', vr.accepted_accounts) }} verified primary surface{{ '' if vr.get('primary_accounts', vr.accepted_accounts) == 1 else 's' }} plus {{ vr.get('related_accounts', 0) }} verified related surface{{ '' if vr.get('related_accounts', 0) == 1 else 's' }}. Each surface is analysed separately in Section 10; unverified candidates and independent press evidence are excluded from creator metrics.</p>{% endif %}
+{% if c and c.measured_items >= 4 %}
+<div class="grid g4">
+  <div class="card"><div class="lbl">Measured items</div><div class="big">{{ c.measured_items }}</div><div class="sm">of {{ c.total_items }} collected</div></div>
+  <div class="card"><div class="lbl">Collected top</div><div class="big">{{ "{:,}".format(c.top_views) }}</div><div class="sm">views, not unique reach</div></div>
+  <div class="card"><div class="lbl">Latest/recent lifetime-view median</div><div class="big">{{ "{:,}".format(c.current_median) if c.current_median else "—" }}</div><div class="sm">{{ c.current_sample }} items · {{ c.recency_basis or 'not identifiable' }}</div></div>
+  <div class="card"><div class="lbl">Older lifetime-view median</div><div class="big">{{ "{:,}".format(c.catalogue_median) if c.catalogue_median else "—" }}</div><div class="sm">{{ c.historical_sample }} items · older items have more exposure time</div></div>
+</div>
+<div class="chartbox"><p class="cap">Top performers by views <span class="chip obs">OBSERVED</span></p><div class="cw t"><canvas id="{{ pre }}cTop"></canvas></div></div>
+{% if dx and dx.view_gini is not none %}
+<h3>Delivery distribution and winner dependence <span class="chip obs">CALCULATED</span></h3>
+<div class="grid g4">
+  <div class="card"><div class="lbl">Middle 50%</div><div class="big">{{ "{:,}".format(dx.view_p25) }}–{{ "{:,}".format(dx.view_p75) }}</div><div class="sm">P25 to P75 · IQR {{ "{:,}".format(dx.view_iqr) }}</div></div>
+  <div class="card"><div class="lbl">Median absolute deviation</div><div class="big">{{ "{:,}".format(dx.view_mad) }}</div><div class="sm">robust volatility around median</div></div>
+  <div class="card"><div class="lbl">Top-fifth share</div><div class="big">{{ dx.top20_share }}%</div><div class="sm">share of sampled views from top 20% of items</div></div>
+  <div class="card"><div class="lbl">Breakout frequency</div><div class="big">{{ dx.breakout_rate }}%</div><div class="sm">items at or above {{ "{:,}".format(dx.breakout_threshold) }} views · 3× median rule</div></div>
+</div>
+<div class="grid g2">
+  <div class="chartbox" style="margin:0"><p class="cap">Lorenz curve of sampled views. Greater bow means more winner dependence.</p><div class="cw"><canvas id="{{ pre }}cLorenz"></canvas></div></div>
+  <div class="card"><h4>Analyst read</h4><p class="sm">{{ dx.volatility_read }}</p><p class="src">Scope: {{ dx.content_scope }}. Lifetime views are not equal-age reach, unique viewers or revenue.</p></div>
+</div>
+{% endif %}
+
+<h3>Title patterns associated with higher matched-date views <span class="chip obs">CALCULATED</span></h3>
+<p class="note">Each dated item is compared with its nearest publication-date neighbours. A 1.4× lift means the phrase's median item delivered 1.4× its matched-date baseline. This controls exposure time approximately, but remains correlation—not causation.</p>
+{% if c.winning_patterns %}
+<div class="tw"><table><thead><tr><th style="width:26%">Phrase</th><th>Items</th><th>Cohort lift</th><th>Median views</th><th>Read</th></tr></thead><tbody>
+{% for w in c.winning_patterns %}<tr><td><b>{{ w.phrase }}</b></td><td class="n">{{ w.n }}</td><td class="n"><span class="pill hi">{{ w.lift }}×</span></td><td class="n">{{ "{:,}".format(w.median_views) }}</td>
+<td>{{ w.basis }} · confidence {{ (w.confidence*100)|round|int }}%.</td></tr>{% endfor %}
+</tbody></table></div>
+{% else %}<p class="note">No phrase reached the significance threshold in the current window.</p>{% endif %}
+
+{% if c.losing_patterns %}
+<h4>Title patterns associated with lower matched-date views</h4>
+<div class="tw"><table><thead><tr><th style="width:26%">Phrase</th><th>Items</th><th>Cohort lift</th><th>Median views</th><th>Read</th></tr></thead><tbody>
+{% for w in c.losing_patterns %}<tr><td><b>{{ w.phrase }}</b></td><td class="n">{{ w.n }}</td><td class="n"><span class="pill lo">{{ w.lift }}×</span></td><td class="n">{{ "{:,}".format(w.median_views) }}</td>
+<td>{{ w.basis }} · confidence {{ (w.confidence*100)|round|int }}%.</td></tr>{% endfor %}
+</tbody></table></div>{% endif %}
+
+{% if c.catalogue_patterns %}
+<h3>What built the channel <span class="chip obs">OBSERVED — historical, not age-adjusted</span></h3>
+<p class="note">Raw lift within the collected historical/popular sample. It describes what the sampled winners had in common; it is not a full-catalogue causal model.</p>
+<div class="tw"><table><thead><tr><th style="width:30%">Phrase</th><th>Items</th><th>Lift vs channel median</th><th>Median views</th></tr></thead><tbody>
+{% for w in c.catalogue_patterns %}<tr><td><b>{{ w.phrase }}</b></td><td class="n">{{ w.n }}</td><td class="n"><span class="pill hi">{{ w.lift }}×</span></td><td class="n">{{ "{:,}".format(w.median_views) }}</td></tr>{% endfor %}
+</tbody></table></div>{% endif %}
+
+<h3>Best and worst performers</h3>
+<div class="tw"><table><thead><tr><th style="width:56%">Title</th><th>Views</th><th>Age</th><th>Length</th></tr></thead><tbody>
+{% for x in c.top_performers %}<tr><td>{% if x.url %}<a href="{{ x.url }}">{{ x.title }}</a>{% else %}{{ x.title }}{% endif %}</td>
+<td class="n">{{ "{:,}".format(x.views) }}</td><td class="n">{{ (x.age_days|string + 'd') if x.age_days is not none else (x.published_relative or '—') }}</td>
+<td class="n">{{ (x.duration_seconds//60)|string + 'm' if x.duration_seconds else '—' }}</td></tr>{% endfor %}
+{% for x in c.worst_performers %}<tr class="dim"><td>{% if x.url %}<a href="{{ x.url }}">{{ x.title }}</a>{% else %}{{ x.title }}{% endif %}</td>
+<td class="n">{{ "{:,}".format(x.views) }}</td><td class="n">{{ (x.age_days|string + 'd') if x.age_days is not none else (x.published_relative or '—') }}</td>
+<td class="n">{{ (x.duration_seconds//60)|string + 'm' if x.duration_seconds else '—' }}</td></tr>{% endfor %}
+</tbody></table></div>
+
+{% if c.format_verdict %}<div class="call"><b>Format</b><p>{{ c.format_verdict }}</p></div>{% endif %}
+{% if dx and dx.format_ratio is not none %}<div class="call"><b>Non-parametric format effect</b><p>{{ dx.format_read }} Long n={{ dx.format_long_n }}, short n={{ dx.format_short_n }}.</p></div>{% endif %}
+
+{% if dx and dx.title_features %}
+<h3>Title construction diagnostic <span class="chip obs">CALCULATED</span></h3>
+<p class="note">Each row compares titles carrying a transparent marker with titles that do not carry it in the same selected sample. Lift is descriptive and does not isolate topic, age, thumbnail or distribution.</p>
+<div class="tw"><table><thead><tr><th style="width:22%">Construction</th><th>Rule</th><th>Items</th><th>Usage</th><th>Median views</th><th>Lift vs without marker</th></tr></thead><tbody>
+{% for x in dx.title_features %}<tr><td><b>{{ x.feature }}</b></td><td>{{ x.definition }}</td><td class="n">{{ x.items }}</td><td class="n">{{ x.share }}%</td><td class="n">{{ "{:,}".format(x.median_views) if x.median_views is not none else '—' }}</td><td class="n">{{ (x.lift|string ~ '×') if x.lift is not none else 'insufficient comparator' }}</td></tr>{% endfor %}
+</tbody></table></div>
+<p class="src">Lexical diversity: {{ dx.lexical_diversity if dx.lexical_diversity is not none else 'unavailable' }} unique meaningful tokens per title token. {{ dx.title_read }}</p>
+{% endif %}
+
+<h3>Content matrix</h3>
+<div class="chartbox"><p class="cap">Every measured item plotted by length against lifetime views. Inspect upper-edge outliers; topic, age and distribution are not fully controlled.</p><div class="cw t"><canvas id="{{ pre }}cMatrix"></canvas></div></div>
+
+{% if c.series %}
+<h3>Multi-part series</h3>
+<div class="tw"><table><thead><tr><th style="width:38%">Series</th><th>Parts</th><th>Part 1 views</th><th>Final-part views</th><th>View-count change</th></tr></thead><tbody>
+{% for sr in c.series %}<tr><td>{{ sr.name }}</td><td class="n">{{ sr.parts }}</td><td class="n">{{ "{:,}".format(sr.first_views) }}</td><td class="n">{{ "{:,}".format(sr.last_views) }}</td>
+<td class="n"><span class="pill {{ 'lo' if sr.attrition > 50 else '' }}">{{ sr.attrition }}%</span></td></tr>{% endfor %}
+</tbody></table></div>{% endif %}
+
+{% if c.promo_gap %}
+<div class="call risk"><b>Promotional markers correlate with lower sampled views</b>
+<p>Non-promotional titles have a sample median of {{ "{:,}".format(c.organic_median) }} views; titles carrying promotional markers have {{ "{:,}".format(c.promo_median) }}, {{ (c.promo_gap*100)|round|int }}% lower. Topic, publication age and distribution were not fully controlled, so use this to design a test—not to guarantee integrated-placement reach.</p></div>{% endif %}
+
+{% if c.seasonality_measured %}
+<h3>Cadence and seasonality <span class="chip obs">OBSERVED</span></h3>
+<div class="chartbox"><p class="cap">Measured across {{ c.active_months }} active months · peak {{ c.peak_month }} · trough {{ c.trough_month }} · {{ c.cadence_per_month }} items/month</p><div class="cw"><canvas id="{{ pre }}cSea"></canvas></div></div>
+{% else %}
+<h3>Seasonality</h3>
+<p class="note">Unavailable. The engine requires an exhaustive dated history spanning at least ten months with repeated observations per month; a category calendar or latest-plus-popular sample is not substituted. <span class="chip una">UNAVAILABLE</span></p>
+{% endif %}
+{% if dx and dx.median_gap_days is not none %}
+<h3>Publishing-system diagnostics <span class="chip obs">CALCULATED</span></h3>
+<div class="grid g4">
+  <div class="card"><div class="lbl">Exact-date items</div><div class="big">{{ dx.publishing_items }}</div><div class="sm">across {{ dx.publishing_window_days }} days</div></div>
+  <div class="card"><div class="lbl">Median upload gap</div><div class="big">{{ dx.median_gap_days }}d</div><div class="sm">typical interval</div></div>
+  <div class="card"><div class="lbl">P90 upload gap</div><div class="big">{{ dx.p90_gap_days }}d</div><div class="sm">long-tail interruption</div></div>
+  <div class="card"><div class="lbl">Burstiness</div><div class="big">{{ dx.burstiness }}</div><div class="sm">−1 regular · 0 mixed · +1 bursty</div></div>
+</div>
+<div class="chartbox"><p class="cap">Consecutive publication gaps in days</p><div class="cw"><canvas id="{{ pre }}cGaps"></canvas></div></div>
+<p class="src">{{ dx.publishing_read }}</p>
+{% endif %}
+{% if c.notes %}<p class="src">{{ c.notes|join(' ') }}</p>{% endif %}
+{% else %}
+<p class="note">Fewer than four content items carried a public view count, so content analysis could not run. This is expected for Instagram-only subjects, where post metrics are login-walled. <span class="chip una">UNAVAILABLE</span></p>
+{% endif %}
+</section>
+
+<section id="{{ pre }}sentiment">
+<h2>07 — Comment &amp; Sentiment Analysis</h2>
+<div class="lede">What the audience says in their own words, where they say it publicly.</div>
+<div class="call correction"><b>Scope disclosure — read before the findings</b><p>{{ p.sentiment.scope_note }}</p></div>
+{% if cm and cm.available %}
+<div class="grid g4">
+  <div class="card"><div class="lbl">Comments analysed</div><div class="big">{{ "{:,}".format(cm.sample_size) }}</div><div class="sm">across {{ cm.videos_sampled }} videos <span class="chip obs">OBSERVED</span></div></div>
+  <div class="card"><div class="lbl">Positive</div><div class="big" style="color:var(--good)">{{ cm.sentiment.positive }}%</div><div class="sm">by lexicon match</div></div>
+  <div class="card"><div class="lbl">Negative</div><div class="big" style="color:var(--bad)">{{ cm.sentiment.negative }}%</div><div class="sm">by lexicon match</div></div>
+  <div class="card"><div class="lbl">Median likes</div><div class="big">{{ cm.median_likes }}</div><div class="sm">per sampled comment</div></div>
+</div>
+<div class="grid g4">
+  <div class="card"><div class="lbl">Unique named authors</div><div class="big">{{ "{:,}".format(cm.unique_authors) }}</div><div class="sm">author metadata coverage {{ cm.author_coverage }}%</div></div>
+  <div class="card"><div class="lbl">Exact duplicate text</div><div class="big">{{ cm.duplicate_rate }}%</div><div class="sm">sample repetition check</div></div>
+  <div class="card"><div class="lbl">Question rate</div><div class="big">{{ cm.question_rate }}%</div><div class="sm">comments containing a question mark</div></div>
+  <div class="card"><div class="lbl">Top-author share</div><div class="big">{{ (cm.top_author_share|string ~ '%') if cm.top_author_share is not none else '—' }}</div><div class="sm">of rows with named authors</div></div>
+</div>
+<div class="call correction"><b>Sample-quality read</b><p>{{ cm.sample_read }}</p></div>
+{% if cm.read %}<div class="call opportunity"><b>What the comments say</b><p>{{ cm.read }}</p></div>{% endif %}
+<div class="grid g2">
+  <div class="chartbox" style="margin:0"><p class="cap">Lexicon-classified sentiment split <span class="chip obs">CALCULATED</span></p><div class="cw s"><canvas id="{{ pre }}cSent"></canvas></div></div>
+  <div class="chartbox" style="margin:0"><p class="cap">Comment marker categories <span class="chip obs">CALCULATED</span></p><div class="cw s"><canvas id="{{ pre }}cIntent"></canvas></div></div>
+</div>
+<h3>What they are asking</h3>
+<div class="tw"><table><thead><tr><th style="width:26%">Question theme</th><th>Share of questions</th><th>Example, verbatim</th></tr></thead><tbody>
+{% for q in cm.question_themes %}<tr><td><b>{{ q.label }}</b></td><td class="n">{{ q.share }}%</td><td><i>“{{ q.examples[0] if q.examples else '' }}”</i></td></tr>{% endfor %}
+</tbody></table></div>
+<h4>Most-liked questions, verbatim</h4>
+<ul class="t">{% for q in cm.top_questions[:8] %}<li>“{{ q.question }}” <span class="src">— {{ q.likes }} likes</span></li>{% endfor %}</ul>
+<h3>Intent, confusion and frustration</h3>
+<div class="tw"><table><thead><tr><th style="width:18%">Category</th><th>Comments</th><th>Share</th><th>Examples, verbatim</th></tr></thead><tbody>
+{% for b in cm.buckets %}<tr><td><b>{{ b.label }}</b></td><td class="n">{{ b.count }}</td><td class="n">{{ b.share }}% <span class="src">95% CI {{ b.ci_low }}–{{ b.ci_high }}%</span></td>
+<td>{% for e in b.examples[:2] %}<i>“{{ e }}”</i>{% if not loop.last %}<br>{% endif %}{% endfor %}</td></tr>{% endfor %}
+</tbody></table></div>
+{% if cm.requests %}<h4>Repeated requests</h4><ul class="t">{% for r in cm.requests[:6] %}<li>“{{ r }}”</li>{% endfor %}</ul>{% endif %}
+{% if cm.outcome_reports %}<h4>Unprompted outcome reports</h4><ul class="t">{% for r in cm.outcome_reports[:5] %}<li>“{{ r }}”</li>{% endfor %}</ul>{% endif %}
+<h3>Audience vocabulary and in-group language</h3>
+<h4>Frequent words in the collected audience-text sample <span class="chip obs">CALCULATED</span></h4>
+<div>{% for v in cm.vocabulary %}<span class="tag">{{ v.word }} <span style="opacity:.55">{{ v.count }}</span></span>{% endfor %}</div>
+{% if cm.inside_jokes %}<h4>Recurring in-group phrases</h4>
+<div>{% for j in cm.inside_jokes %}<span class="tag">{{ j.phrase }} <span style="opacity:.55">{{ j.count }}</span></span>{% endfor %}</div>
+<p class="src">Phrases the audience repeats that the creator does not — the closest measurable proxy for in-group language.</p>{% endif %}
+<h4>Most-liked comments</h4>
+<div class="tw"><table><thead><tr><th style="width:62%">Comment</th><th>Likes</th><th>On</th></tr></thead><tbody>
+{% for ml in cm.most_liked %}<tr><td><i>“{{ ml.text }}”</i></td><td class="n">{{ ml.likes }}</td><td class="src">{{ ml.video }}</td></tr>{% endfor %}
+</tbody></table></div>
+{% endif %}
+{% if p.sentiment.verbatim_available %}
+<h3>Verbatim reviews on owned surfaces</h3>
+<p class="note">{{ p.sentiment.sample_size }} verbatim public reviews analysed{% if p.sentiment.source %} from <a href="{{ p.sentiment.source }}">{{ p.sentiment.source_label or "a public review surface" }}</a>{% endif %}. <span class="chip obs">OBSERVED</span></p>
+<div class="tw"><table><thead><tr><th style="width:24%">Theme</th><th>Frequency</th><th>Share</th><th>Representative quote</th></tr></thead><tbody>
+{% for th in p.sentiment.themes %}<tr><td><b>{{ th.theme }}</b></td><td>{{ th.frequency }}</td><td class="n">{{ th.share }}%</td><td><i>“{{ th.quote }}”</i></td></tr>{% endfor %}
+</tbody></table></div>
+{% if p.sentiment.read %}<div class="call opportunity"><b>The marketing implication</b><p>{{ p.sentiment.read }}</p></div>{% endif %}
+{% else %}
+<p class="note">No verbatim public review text was found on any owned surface, and platform comment threads require authentication. Sentiment is therefore <span class="chip una">UNAVAILABLE</span> rather than modelled — we will not present a synthetic sentiment split as if it were measured.</p>
+{% endif %}
+</section>
+
+<section id="{{ pre }}competitors">
+<h2>08 — Competitor Landscape</h2>
+{% if p.competitors and p.competitors.assessed %}
+<div class="lede">{{ p.competitors.verdict }}</div>
+<p class="note">{{ p.competitors.queries_run }} discovery queries run, {{ p.competitors.candidates_found }} candidate accounts identified, top {{ p.competitors.competitors|length }} collected. Discovery is topic-driven: two creators compete when they serve the same audience the same subject, not when their names look alike.</p>
+<div class="tw"><table><thead><tr><th style="width:18%">Account</th><th>Followers</th><th>vs subject</th><th>Content overlap</th><th>Topic/stage affinity</th><th>Strength</th><th>Weakness</th></tr></thead><tbody>
+{% for cp in p.competitors.competitors %}<tr><td><a href="{{ cp.url }}"><b>{{ cp.display_name or cp.handle }}</b></a><div class="src">@{{ cp.handle }} · {{ cp.platform }}</div></td>
+<td class="n">{{ "{:,}".format(cp.followers) if cp.followers else (cp.note or "—") }}</td>
+<td class="n">{{ cp.size_vs_subject or "—" }}</td>
+<td class="n">{{ (cp.content_overlap|string ~ '%') if cp.content_overlap is not none else "—" }}</td>
+<td>{{ cp.audience_overlap or "—" }}</td><td>{{ cp.strength }}</td><td>{{ cp.weakness }}</td></tr>{% endfor %}
+</tbody></table></div>
+{% if p.competitors.subject_rank %}<div class="call"><b>Ranking</b><p>The subject sits at #{{ p.competitors.subject_rank }} by audience size among the accounts discovered in this niche.</p></div>{% endif %}
+<div class="chartbox"><p class="cap">Competitor matrix — audience size against topical overlap with the subject</p><div class="cw"><canvas id="{{ pre }}cComp"></canvas></div></div>
+<p class="src">Follower counts read live at generation time. <span class="chip obs">OBSERVED</span></p>
+{% else %}
+<p class="note">{{ p.competitors.reason if p.competitors else "Competitor discovery was not enabled for this run." }} <span class="chip una">NOT ASSESSED</span></p>
+{% endif %}
+</section>
+
+<section id="{{ pre }}seo">
+<h2>09 — SEO &amp; Discoverability</h2>
+{% if s and s.assessed %}
+<div class="lede">{{ s.verdict }}</div>
+<div class="grid g4">
+  <div class="card"><div class="lbl">Evidence rubric grade</div><div class="big">{{ s.grade }}</div><div class="sm">internal rubric over sampled results</div></div>
+  <div class="card"><div class="lbl">Controls page one</div><div class="big">{{ s.owns_page_one }}</div><div class="sm">{{ (s.ownership_share*100)|round|int }}% of sampled branded results are creator-controlled/platform surfaces</div></div>
+  <div class="card"><div class="lbl">Name collision</div><div class="big">{{ s.collision_risk }}</div><div class="sm">{{ s.collision_note }}</div></div>
+  <div class="card"><div class="lbl">Discovered route/property URLs</div><div class="big">{{ s.owned_properties|length }}</div><div class="sm">includes hosted storefronts/link pages</div></div>
+</div>
+{% if dx and dx.serp_results %}
+<h3>Branded SERP control diagnostics <span class="chip obs">CALCULATED</span></h3>
+<div class="grid g4">
+  <div class="card"><div class="lbl">Owned/platform top 3</div><div class="big">{{ dx.owned_top3 }}/3</div><div class="sm">sampled branded results</div></div>
+  <div class="card"><div class="lbl">Owned/platform top 10</div><div class="big">{{ dx.owned_top10 }}/{{ dx.serp_results }}</div><div class="sm">result-control breadth</div></div>
+  <div class="card"><div class="lbl">First controlled rank</div><div class="big">{{ dx.first_owned_rank or '—' }}</div><div class="sm">reciprocal rank {{ dx.reciprocal_rank }}</div></div>
+  <div class="card"><div class="lbl">Entity collisions</div><div class="big">{{ dx.collision_count }}</div><div class="sm">distinct competing names/entities</div></div>
+</div>
+<p class="src">{{ dx.serp_read }} Search volume, click-through rate and traffic were not measured.</p>
+{% endif %}
+{% if s.competing_entities %}<h4>Competing for this name</h4><ul class="t">{% for e in s.competing_entities %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+{% else %}
+<div class="lede">Not assessed this run.</div>
+<p class="note">{{ s.reason_not_assessed if s else "" }} <span class="chip una">NOT ASSESSED</span></p>
+{% endif %}
+{% if s and s.keyword_footprint %}
+<h3>Declared keyword footprint <span class="chip obs">OBSERVED</span></h3>
+<div>{% for k in s.keyword_footprint %}<span class="tag">{{ k }}</span>{% endfor %}</div>
+<p class="src">{{ s.keyword_note }}</p>{% endif %}
+{% if s and s.intent_clusters %}
+<h3>Content-topic intent hypotheses</h3>
+<p class="note">These classify the creator's collected content. They do not measure keyword volume or ranking.</p>
+<div class="tw"><table><thead><tr><th style="width:22%">Cluster</th><th>Share of topic signals</th><th style="width:22%">Likely intent</th><th style="width:22%">Demand status</th><th>Property gap</th></tr></thead><tbody>
+{% for ic in s.intent_clusters %}<tr><td><b>{{ ic.cluster }}</b></td><td class="n">{{ ic.share }}%</td><td>{{ ic.intent }}</td><td>{{ ic.value }}</td><td>{{ ic.gap }}</td></tr>{% endfor %}
+</tbody></table></div>{% endif %}
+{% if s and s.related_searches %}
+<h3>Live autocomplete suggestions <span class="chip obs">OBSERVED — keyless</span></h3>
+<p class="note">{{ s.autocomplete_note }}</p>
+<div>{% for q in s.related_searches %}<span class="tag">{{ q }}</span>{% endfor %}</div>
+{% if s.autocomplete_intents %}
+<div class="tw"><table><thead><tr><th style="width:24%">Search intent</th><th>Queries</th><th>Share</th><th>Examples</th></tr></thead><tbody>
+{% for i in s.autocomplete_intents %}<tr><td><b>{{ i.intent }}</b></td><td class="n">{{ i.count }}</td><td class="n">{{ i.share }}%</td>
+<td>{% for e in i.examples %}<span class="tag">{{ e }}</span>{% endfor %}</td></tr>{% endfor %}
+</tbody></table></div>{% endif %}
+{% endif %}
+
+{% set kl = p.raw.keyless %}
+{% if kl and (kl.podcasts or kl.wikipedia_title or kl.wikidata_id) %}
+<h3>Off-platform footprint <span class="chip obs">OBSERVED — keyless</span></h3>
+{% if kl.wikidata_id %}
+<p class="note">Wikidata item <a href="https://www.wikidata.org/wiki/{{ kl.wikidata_id }}">{{ kl.wikidata_id }}</a>
+— structured public claims, not a login-walled page reading.
+{% if kl.wikidata_description %} {{ kl.wikidata_description }}{% endif %}</p>
+{% endif %}
+{% if kl.official_ids %}
+<p><b>Official IDs already on Wikidata</b> — copied, never guessed from Instagram:
+{% for k, v in kl.official_ids.items() %}
+{{ k }} {{ v }}{% if not loop.last %} · {% endif %}
+{% endfor %}.</p>
+{% endif %}
+{% if kl.filings and kl.filings.records %}
+<p class="note">Official records ran only because those IDs were already on Wikidata. Valuation was not stored.</p>
+{% endif %}
+{% if kl.wikipedia_title %}
+<div class="call"><b>Wikipedia entry — {{ kl.wikipedia_title }}</b>
+<p>{{ kl.wikipedia_extract }} {% if kl.wikipedia_url %}<a href="{{ kl.wikipedia_url }}">Read it</a>{% endif %}</p>
+{% if kl.wikipedia_sections %}
+<ul class="t">{% for sec in kl.wikipedia_sections %}<li><b>{{ sec.title }}</b> — {{ sec.extract }}</li>{% endfor %}</ul>
+<p class="src">Article sections from the official MediaWiki extracts API. They are encyclopedia headings, not content pillars or audience interests.</p>
+{% endif %}
+</div>
+{% endif %}
+{% if kl.podcasts %}
+<h4>Podcast appearances</h4>
+<div class="tw"><table><thead><tr><th style="width:40%">Title</th><th>Type</th><th>Publisher</th><th>Released</th></tr></thead><tbody>
+{% for pod in kl.podcasts %}<tr><td><a href="{{ pod.url }}">{{ pod.title }}</a></td><td>{{ pod.kind }}</td>
+<td>{{ pod.publisher or '—' }}</td><td class="n">{{ pod.released or '—' }}</td></tr>{% endfor %}
+</tbody></table></div>
+<p class="src">Found through Apple's public Search API — no key, no scraping.</p>
+{% endif %}
+{% endif %}
+
+{% if s and s.third_party_citations %}<h4>Third-party citations</h4><ul class="t">{% for u in s.third_party_citations %}<li><a href="{{ u }}">{{ u }}</a></li>{% endfor %}</ul>{% endif %}
+</section>
+
+<section id="{{ pre }}platforms2">
+<h2>10 — Platform-by-Platform Analysis</h2>
+<div class="lede">Public account scale, sampled delivery, cadence, tone markers, hooks, CTAs and historical view dispersion—kept separate by surface.</div>
+<div class="chartbox"><p class="cap">Verified account comparison — each primary, associated-brand and secondary account is shown separately; follows are not unique people</p><div class="cw"><canvas id="{{ pre }}cPlat"></canvas></div></div>
+{% for pl in p.platforms %}
+<h3>{{ pl.platform|title }}{% if pl.handle %} · <span style="font-weight:400;color:var(--mut);font-size:14px">@{{ pl.handle }}</span>{% endif %} · <span class="chip obs">{{ pl.relationship.replace('_',' ')|upper }}</span></h3>
+{% if pl.status != 'analysed' %}<p class="note">{{ pl.note }} <span class="chip una">{{ pl.status|upper }}</span></p>{% endif %}
+<div class="tw"><table><tbody>
+<tr><td style="width:20%"><b>Positioning</b></td><td>{{ pl.positioning }}</td></tr>
+<tr><td><b>Follower authenticity</b></td><td><span class="pill">{{ pl.follower_quality }}</span> — {{ pl.follower_note }}</td></tr>
+<tr><td><b>Engagement evidence</b></td><td><span class="pill">{{ pl.engagement_quality }}</span> — {{ pl.engagement_note }}</td></tr>
+<tr><td><b>Community evidence</b></td><td><span class="pill">{{ pl.community_strength }}</span> — {{ pl.community_note }}</td></tr>
+<tr><td><b>Historical view dispersion</b></td><td><span class="pill">{{ pl.virality }}</span> — {{ pl.virality_note }}</td></tr>
+{% if pl.posting_frequency %}<tr><td><b>Posting frequency</b></td><td>{{ pl.posting_frequency }}</td></tr>{% endif %}
+{% if pl.content_categories %}<tr><td><b>Content categories</b></td><td>{% for cc in pl.content_categories %}{{ cc.category }} {{ cc.share }}%{% if not loop.last %} · {% endif %}{% endfor %}</td></tr>{% endif %}
+{% if pl.tone %}<tr><td><b>Tone</b></td><td>{% for tn in pl.tone %}{{ tn.tone }} {{ tn.share }}%{% if not loop.last %} · {% endif %}{% endfor %}</td></tr>{% endif %}
+{% if pl.hooks %}<tr><td><b>Hooks</b></td><td>{% for hk in pl.hooks %}{{ hk.hook }} ({{ hk.share }}% of titles){% if not loop.last %} · {% endif %}{% endfor %}</td></tr>{% endif %}
+{% if pl.ctas %}<tr><td><b>Calls to action</b></td><td>{% for ct in pl.ctas %}{{ ct.cta }} ({{ ct.mentions }}){% if not loop.last %} · {% endif %}{% endfor %}</td></tr>{% endif %}
+{% if pl.hashtags %}<tr><td><b>Hashtags</b></td><td>{% for h in pl.hashtags %}<span class="tag">{{ h.tag }}</span>{% endfor %}</td></tr>{% endif %}
+<tr><td><b>Visual style</b></td><td>{{ pl.visual_style }}</td></tr>
+{% if pl.storytelling %}<tr><td><b>Storytelling</b></td><td>{{ pl.storytelling }}</td></tr>{% endif %}
+<tr><td><b>SEO</b></td><td>{{ pl.seo_note }}</td></tr>
+</tbody></table></div>
+{% endfor %}
+</section>
+
+<section id="{{ pre }}brand">
+<h2>11 — Brand Analysis</h2>
+<div class="lede">{{ br.perception }}</div>
+<div class="grid g4">
+{% for pil in br.pillars %}
+  <div class="card"><div class="lbl">{{ pil.name }}</div><div class="big">{{ pil.score }}<span style="font-size:15px;color:var(--dim)">/10</span></div><div class="sm">{{ pil.grade }}</div></div>
+{% endfor %}
+</div>
+<div class="tw"><table><thead><tr><th style="width:16%">Pillar</th><th style="width:8%">Score</th><th style="width:30%">Evidence</th><th>Reading</th></tr></thead><tbody>
+{% for pil in br.pillars %}<tr><td><b>{{ pil.name }}</b></td><td class="n">{{ pil.score }}/10</td>
+<td>{{ pil.evidence|join('; ') if pil.evidence else '—' }}</td><td>{{ pil.why }}</td></tr>{% endfor %}
+</tbody></table></div>
+<div class="grid g2">
+  <div class="card"><h4>Brand promise</h4><p class="sm">{{ br.promise }}</p>
+    <h4>Proof points</h4><ul class="t">{% for pr in br.proof %}<li>{{ pr }}</li>{% endfor %}</ul></div>
+  <div class="card"><h4>Brand personality</h4>
+    {% for tr in br.personality %}<div class="rw" style="display:flex;justify-content:space-between;font-size:12.5px;margin-top:10px"><span>{{ tr.trait }}</span><span style="color:var(--mut)">{{ tr.share }}%</span></div><div class="bar"><i style="width:{{ tr.share }}%"></i></div>{% endfor %}
+    <h4 style="margin-top:18px">Brand voice</h4>
+    {% for v in br.voice %}<div style="font-size:12.5px;margin-top:8px">{{ v.axis }} — reads <b>{{ v.reads }}</b></div><div class="bar"><i style="width:{{ v.position }}%"></i></div>{% endfor %}
+  </div>
+</div>
+<h3>SWOT</h3>
+<div class="grid g2">
+  <div class="card" style="border-top:3px solid var(--good)"><h4 style="color:var(--good)">Strengths</h4><ul class="t">{% for x in br.swot.strengths %}<li>{{ x }}</li>{% endfor %}</ul></div>
+  <div class="card" style="border-top:3px solid var(--bad)"><h4 style="color:var(--bad)">Weaknesses</h4><ul class="t">{% for x in br.swot.weaknesses %}<li>{{ x }}</li>{% endfor %}</ul></div>
+  <div class="card" style="border-top:3px solid var(--acc)"><h4 style="color:var(--acc)">Opportunities</h4><ul class="t">{% for x in br.swot.opportunities %}<li>{{ x }}</li>{% endfor %}</ul></div>
+  <div class="card" style="border-top:3px solid var(--warn)"><h4 style="color:var(--warn)">Threats</h4><ul class="t">{% for x in br.swot.threats %}<li>{{ x }}</li>{% endfor %}</ul></div>
+</div>
+<h3>Brand positioning map</h3>
+<div class="chartbox"><p class="cap">{{ br.position_note }}</p><div class="cw t"><canvas id="{{ pre }}cPos"></canvas></div></div>
+<p class="src">{{ br.consistency }}</p>
+</section>
+
+<section id="{{ pre }}growth2">
+<h2>12 — Growth Analysis</h2>
+{% if gr.measurable %}
+<div class="lede">{{ gr.trend_note }}</div>
+<div class="chartbox"><p class="cap">Growth timeline — median views per item by quarter <span class="chip obs">OBSERVED</span></p><div class="cw"><canvas id="{{ pre }}cGrowth"></canvas></div></div>
+<div class="tw"><table><thead><tr><th style="width:12%">Era</th><th>Window</th><th>Items</th><th>Median views</th><th>Median length</th><th>Dominant topics</th></tr></thead><tbody>
+{% for e in gr.eras %}<tr><td><b>{{ e.label }}</b></td><td class="n">{{ e.start }} – {{ e.end }}</td><td class="n">{{ e.items }}</td>
+<td class="n">{{ "{:,}".format(e.median_views) }}</td><td class="n">{{ (e.median_duration_min|string ~ ' min') if e.median_duration_min else '—' }}</td>
+<td>{{ e.top_topics|join(', ') }}</td></tr>{% endfor %}
+</tbody></table></div>
+{% if gr.content_evolution %}<div class="call"><b>Content evolution</b><p>{{ gr.content_evolution }}</p></div>{% endif %}
+{% if gr.audience_evolution %}<div class="call"><b>Audience evolution</b><p>{{ gr.audience_evolution }}</p></div>{% endif %}
+{% if gr.brand_evolution %}<div class="call"><b>Brand evolution</b><p>{{ gr.brand_evolution }}</p></div>{% endif %}
+{% else %}
+<div class="lede">Trajectory not measurable this run.</div>
+<p class="note">{{ gr.reason }} <span class="chip una">UNAVAILABLE</span></p>
+{% endif %}
+{% if gr.bottlenecks %}<h3>Growth bottlenecks</h3>
+<div class="tw"><table><thead><tr><th style="width:22%">Bottleneck</th><th style="width:30%">Evidence</th><th>Effect</th></tr></thead><tbody>
+{% for b in gr.bottlenecks %}<tr><td><b>{{ b.bottleneck }}</b></td><td>{{ b.evidence }}</td><td>{{ b.effect }}</td></tr>{% endfor %}
+</tbody></table></div>{% endif %}
+{% if gr.missed %}<h3>Missed opportunities</h3>
+<ul class="t">{% for m in gr.missed %}<li><b>{{ m.missed }}.</b> {{ m.evidence }}</li>{% endfor %}</ul>{% endif %}
+{% if gr.future %}<h3>Future plays</h3>
+<div class="tw"><table><thead><tr><th style="width:34%">Play</th><th>Why now</th></tr></thead><tbody>
+{% for fu in gr.future %}<tr><td><b>{{ fu.play }}</b></td><td>{{ fu.why }}</td></tr>{% endfor %}
+</tbody></table></div>{% endif %}
+</section>
+
+<section id="{{ pre }}funnel">
+<h2>13 — Marketing Funnel Assessment</h2>
+<div class="lede">Public offer and routing evidence. Conversion, revenue and retention remain unavailable without first-party data.</div>
+<div class="grid g4">
+  <div class="card"><div class="lbl">Funnel score</div><div class="big">{{ f.total }}<span style="font-size:16px;color:var(--dim)">/70</span></div><div class="sm">seven dimensions</div></div>
+  <div class="card"><div class="lbl">Price ladder</div><div class="big">{{ f.rungs|length }}</div><div class="sm">{% if f.spread %}{{ f.spread }}× spread, ₹{{ "{:,.0f}".format(f.price_min) }}–₹{{ "{:,.0f}".format(f.price_max) }}{% else %}no public pricing{% endif %}</div></div>
+  <div class="card"><div class="lbl">Permissioned channels</div><div class="big">{{ f.permissioned_channels|length }}</div><div class="sm">{{ f.permissioned_channels|join(', ') or 'none observed' }}</div></div>
+  <div class="card"><div class="lbl">Verified first-party list</div><div class="big">{{ 'yes' if f.owned_audience else 'not observed' }}</div><div class="sm">{{ f.owned_audience_note }}</div></div>
+</div>
+{% if dx %}
+<h3>Offer architecture and routing diagnostics <span class="chip obs">CALCULATED</span></h3>
+<div class="grid g4">
+  <div class="card"><div class="lbl">Observed SKUs</div><div class="big">{{ dx.sku_count }}</div><div class="sm">{{ dx.priced_sku_count }} with public price</div></div>
+  <div class="card"><div class="lbl">Log price span</div><div class="big">{{ dx.log_price_span if dx.log_price_span is not none else '—' }}</div><div class="sm">log10(max/min), not willingness to pay</div></div>
+  <div class="card"><div class="lbl">Largest adjacent step</div><div class="big">{{ (dx.max_adjacent_price_gap|string ~ '×') if dx.max_adjacent_price_gap is not none else '—' }}</div><div class="sm">largest gap between sorted public prices</div></div>
+  <div class="card"><div class="lbl">Routing evidence coverage</div><div class="big">{{ dx.route_readiness }}<span style="font-size:15px;color:var(--dim)">/100</span></div><div class="sm">visible infrastructure only</div></div>
+</div>
+{% if p.funnel.rungs %}<div class="chartbox"><p class="cap">Observed price ladder. Architecture only; sales distribution unavailable.</p><div class="cw"><canvas id="{{ pre }}cPrices"></canvas></div></div>{% endif %}
+<div class="tw"><table><thead><tr><th>Infrastructure component</th><th>Observed</th><th>Coverage weight</th><th>Interpretation</th></tr></thead><tbody>
+{% for x in dx.route_components %}<tr><td><b>{{ x.component }}</b></td><td><span class="chip {{ 'obs' if x.observed else 'una' }}">{{ 'YES' if x.observed else 'NO' }}</span></td><td class="n">{{ x.weight }}</td><td>{{ 'Public evidence found.' if x.observed else 'Not observed; absence from public surfaces is not proof it does not exist.' }}</td></tr>{% endfor %}
+</tbody></table></div>
+<p class="src">{{ dx.offer_read }}</p>
+{% endif %}
+<div class="fun">
+{% for st in f.stages %}<div class="fst" style="width:{{ st.width }}%"><b>{{ st.stage }}</b><span>{{ st.detail }}</span></div>{% endfor %}
+</div>
+<p class="note">Stage widths are illustrative layout only; they are not conversion rates or measured drop-off.</p>
+{% if f.rungs %}
+<h3>Observed price ladder <span class="chip obs">OBSERVED</span></h3>
+<div class="tw"><table><thead><tr><th style="width:14%">Tier</th><th>Product</th><th>Price</th></tr></thead><tbody>
+{% for r in f.rungs %}<tr><td>{{ r.tier.replace('_',' ') }}</td><td>{{ r.name }}</td><td class="n">₹{{ "{:,.0f}".format(r.price_inr) }}</td></tr>{% endfor %}
+</tbody></table></div>{% endif %}
+<h3>Evidence-coverage rubric</h3>
+<div class="chartbox"><div class="cw t"><canvas id="{{ pre }}cFun"></canvas></div></div>
+<div class="tw"><table><thead><tr><th style="width:20%">Dimension</th><th style="width:8%">Score</th><th>Reasoning</th></tr></thead><tbody>
+{% for sc in f.scores %}<tr><td><b>{{ sc.dimension }}</b></td><td class="n">{{ sc.value }}/10</td><td>{{ sc.why }}</td></tr>{% endfor %}
+</tbody></table></div>
+<div class="call opportunity"><b>Strongest</b><p>{{ f.strength }}</p></div>
+<div class="call risk"><b>Weakest</b><p>{{ f.gap }}</p></div>
+</section>
+
+<section id="{{ pre }}personas">
+<h2>14 — Audience Personas</h2>
+<div class="lede">{{ a.personas|length }} activation hypotheses derived from content needs—not measured audience segments. Validate them in comments, surveys or first-party analytics before targeting.</div>
+<div class="grid g3">
+{% for pe in a.personas %}
+<div class="pers"><div class="pn">{{ pe.name }}</div><div class="pt">{{ pe.tag }}</div><div class="src">{{ pe.basis }} · confidence {{ (pe.confidence*100)|round|int }}%</div><dl>
+<dt>Goal</dt><dd>{{ pe.goal }}</dd><dt>Pain</dt><dd>{{ pe.pain }}</dd><dt>Watches</dt><dd>{{ pe.watches }}</dd>
+<dt>Buys</dt><dd>{{ pe.buys }}</dd><dt>Also on</dt><dd>{{ pe.also_on }}</dd><dt>Reach them with</dt><dd>{{ pe.reach_with }}</dd>
+</dl></div>{% endfor %}
+</div>
+</section>
+
+<section id="{{ pre }}growth">
+<h2>15 — Growth Opportunities</h2>
+<div class="lede">Test ideas tied to specific observations. Impact remains unvalidated until a controlled test or first-party result exists.</div>
+{% if p.opportunities %}
+<div class="tw"><table><thead><tr><th style="width:12%">Area</th><th>Opportunity</th><th style="width:10%">Effort</th><th style="width:11%">Impact</th></tr></thead><tbody>
+{% for o in p.opportunities %}<tr><td><b>{{ o.area }}</b></td><td>{{ o.what }}</td><td>{{ o.effort }}</td>
+<td><span class="pill {{ 'hi' if 'Very high' in o.impact else '' }}">{{ o.impact }}</span></td></tr>{% endfor %}
+</tbody></table></div>
+{% else %}<p class="note">No opportunity rule fired for this subject.</p>{% endif %}
+</section>
+
+<section id="{{ pre }}recs">
+<h2>16 — Strategic Recommendations</h2>
+<div class="lede">Split by who is reading this.</div>
+<div class="tw"><table><thead><tr><th style="width:12%">Priority</th><th style="width:20%">Who</th><th style="width:26%">Do this</th><th>Because</th></tr></thead><tbody>
+{% for r in p.recommendations %}<tr><td><span class="pill {{ 'lo' if r.priority == 'Critical' else '' }}">{{ r.priority }}</span></td><td>{{ r.who }}</td><td><b>{{ r.what }}</b></td><td>{{ r.why }}</td></tr>{% endfor %}
+</tbody></table></div>
+<h3>Activation summary</h3>
+<div class="tw"><table><thead><tr><th style="width:28%">If you are…</th><th>Then</th></tr></thead><tbody>
+{% for act in a.activation %}<tr><td><b>{{ act.who }}</b></td><td>{{ act.do }}</td></tr>{% endfor %}
+</tbody></table></div>
+{% if dx %}
+<h3>Decision-gate validation register</h3>
+<p class="note">These are the missing inputs that can materially change a brand, product or investment decision. They are prioritised above cosmetic extra data.</p>
+<div class="tw"><table><thead><tr><th style="width:24%">Blocked decision dimension</th><th>Why current evidence is insufficient</th><th>Required next evidence</th></tr></thead><tbody>
+{% for e in dx.evidence_dimensions if e.status in ('unavailable','modelled') %}<tr><td><b>{{ e.dimension }}</b></td><td>{{ e.evidence }}</td><td>{{ e.unlock }}</td></tr>{% endfor %}
+</tbody></table></div>
+{% endif %}
+</section>

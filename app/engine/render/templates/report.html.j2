@@ -1,0 +1,79 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<meta property="og:title" content="Audience Intelligence — {{ p.subject_name }}">
+<meta property="og:description" content="{{ p.audience.one_liner|e }}">
+<meta property="og:type" content="article">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%233dd68c'/%3E%3Ctext x='16' y='22' font-family='sans-serif' font-size='16' font-weight='800' fill='%2304140c' text-anchor='middle'%3ECI%3C/text%3E%3C/svg%3E">
+
+<title>Audience Intelligence — {{ p.subject_name }}</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+{% include "_style.html.j2" %}
+</head><body>
+<a class="skip" href="#main">Skip to report</a>
+{% set a = p.audience %}{% set pre = "" %}
+<nav><div class="nv">
+<a href="#desk">0 Desk</a><a href="#exec">1 Summary</a><a href="#overview">2 Overview</a><a href="#platforms">3 Presence</a>
+<a href="#audience">4 Audience</a><a href="#agency">5 Agency desk</a><a href="#content">6 Content</a>
+<a href="#sentiment">7 Comments</a><a href="#competitors">8 Competitors</a><a href="#seo">9 SEO</a>
+<a href="#platforms2">10 Per-platform</a><a href="#brand">11 Brand</a><a href="#growth2">12 Growth</a>
+<a href="#funnel">13 Funnel</a><a href="#personas">14 Personas</a><a href="#growth">15 Opportunities</a>
+<a href="#recs">16 Recommendations</a><a href="#method">17 Appendix</a></div></nav>
+<main id="main" class="wrap">
+<div class="cover">
+  <div class="cover-top">
+    {% if p.overview and p.overview.portrait_url %}
+    <img class="portrait" src="{{ p.overview.portrait_url }}"
+         alt="Wikimedia portrait of {{ p.subject_name }}"
+         width="96" height="96" referrerpolicy="no-referrer">
+    {% endif %}
+    <div class="cover-copy">
+      <div class="kick">Audience Intelligence Report · {{ a.archetype_label }}</div>
+      <h1>{{ p.subject_name }}</h1>
+      <div class="handle">{{ p.subject_handle }} &nbsp;·&nbsp; {{ platform_line }}</div>
+    </div>
+  </div>
+  <div class="one">{{ a.one_liner }}</div>
+  <div class="meta">Generated {{ p.generated_at.strftime('%d %B %Y, %H:%M UTC') }} ·
+    engine v{{ p.engine_version }} ·
+    life-stage model confidence <b style="color:var(--txt)">{{ (a.age.confidence*100)|round|int }}%</b> ·
+    {{ a.signals_fired|length }} signals fired ·
+    {{ p.raw.accounts|length }} surfaces collected</div>
+</div>
+{% include "_creator.html.j2" %}
+{% include "_appendix.html.j2" %}
+<footer>{{ p.subject_name }} · generated {{ p.generated_at.strftime('%d %b %Y') }} · engine v{{ p.engine_version }}. Figures drift; re-generate before contracting.</footer>
+</main>
+{% include "_charts.html.j2" %}
+<script>
+/* Marks the section currently in view in the sticky nav. Without it a reader
+   seventeen sections deep has no idea where they are. Uses IntersectionObserver
+   rather than a scroll handler so it costs nothing on long documents. */
+(function(){
+  var links = [].slice.call(document.querySelectorAll('nav .nv a[href^="#"]'));
+  if (!links.length || !('IntersectionObserver' in window)) return;
+  var byId = {};
+  links.forEach(function(a){ byId[a.getAttribute('href').slice(1)] = a; });
+  var targets = Object.keys(byId)
+    .map(function(id){ return document.getElementById(id); })
+    .filter(Boolean);
+  if (!targets.length) return;
+  var seen = {};
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){ seen[e.target.id] = e.isIntersecting; });
+    var current = null;
+    for (var i = 0; i < targets.length; i++) {
+      if (seen[targets[i].id]) { current = targets[i].id; break; }
+    }
+    if (!current) return;
+    links.forEach(function(a){ a.classList.remove('on'); });
+    if (byId[current]) {
+      byId[current].classList.add('on');
+      byId[current].setAttribute('aria-current', 'true');
+    }
+  }, { rootMargin: '-72px 0px -70% 0px', threshold: 0 });
+  targets.forEach(function(t){ io.observe(t); });
+})();
+</script>
+</body></html>

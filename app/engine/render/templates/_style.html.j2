@@ -1,0 +1,171 @@
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Outfit:wght@400;500;600;700;800&display=swap');
+:root{
+  --ink:#0b0d10; --ink2:#12151a; --ink3:#181c23; --line:rgba(255,255,255,.07); --line2:rgba(255,255,255,.12);
+  --txt:#f2f4f7; --mut:#9aa3b2; --dim:#6b7382;
+  --good:#3dd68c; --warn:#d4a84b; --bad:#e87070;
+  --acc:#3dd68c; --a2:#6eb6ff; --a3:#3dd68c; --a4:#d4a84b;
+  --ease:cubic-bezier(0.32,0.72,0,1);
+}
+*{box-sizing:border-box}
+body{margin:0;background:
+  radial-gradient(900px 420px at 10% -10%,rgba(61,214,140,.07),transparent 55%),
+  var(--ink);color:var(--txt);font:15px/1.65 Outfit,ui-sans-serif,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1140px;margin:0 auto;padding:0 26px 90px}
+h1,h2,h3,h4{line-height:1.2;margin:0;letter-spacing:-.02em;text-wrap:balance}
+a{color:var(--acc);text-decoration:none}a:hover{color:#6ee7a8}
+nav{position:sticky;top:0;z-index:60;padding:12px 16px 0}
+nav .nv{
+  max-width:1140px;margin:0 auto;padding:10px 14px;display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;
+  background:rgba(18,21,26,.78);backdrop-filter:blur(16px);border:1px solid var(--line2);border-radius:999px
+}
+nav .nv::-webkit-scrollbar{display:none}
+nav a{color:var(--mut);font-size:12px;padding:6px 10px;border-radius:999px;white-space:nowrap;font-weight:600;transition:background .2s var(--ease),color .2s var(--ease)}
+nav a:hover{background:rgba(255,255,255,.04);color:var(--txt);text-decoration:none}
+.cover{padding:52px 0 34px;border-bottom:1px solid var(--line)}
+.cover-top{display:flex;gap:22px;align-items:flex-start}
+.cover-copy{min-width:0}
+.portrait{width:96px;height:96px;object-fit:cover;border-radius:18px;border:1px solid var(--line2);box-shadow:0 8px 24px rgba(0,0,0,.28);background:var(--ink3);flex:0 0 96px}
+.kick{display:inline-flex;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--acc);font-weight:700;margin-bottom:14px;padding:5px 11px;border-radius:999px;background:rgba(61,214,140,.12);border:1px solid rgba(61,214,140,.22)}
+.cover h1{font-size:clamp(2rem,4vw,2.65rem);font-weight:800;letter-spacing:-.04em;max-width:920px}
+.cover .handle{font-family:"IBM Plex Mono",ui-monospace,monospace;color:var(--mut);font-size:13px;margin-top:12px}
+.cover .one{font-size:18px;color:var(--txt);margin-top:18px;max-width:65ch;font-weight:450;line-height:1.55;text-wrap:pretty}
+.cover .meta{margin-top:20px;font-size:12.5px;color:var(--dim)}
+section{padding:48px 0;border-bottom:1px solid var(--line)}
+section>h2{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);font-weight:700}
+section>h2+.lede{font-size:clamp(1.35rem,2.4vw,1.65rem);font-weight:700;letter-spacing:-.03em;margin:12px 0 10px;max-width:880px}
+h3{font-size:17px;font-weight:700;margin:32px 0 10px;letter-spacing:-.02em}
+h4{font-size:14px;font-weight:650;margin:22px 0 8px;color:var(--txt)}
+p{margin:0 0 11px}.note{color:var(--mut);max-width:65ch}
+.chip{display:inline-flex;font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px;letter-spacing:.04em;white-space:nowrap;vertical-align:middle;font-family:"IBM Plex Mono",ui-monospace,monospace}
+.obs{background:rgba(61,214,140,.12);color:#6ee7a8;border:1px solid rgba(61,214,140,.28)}
+.est{background:rgba(212,168,75,.12);color:#e6c36a;border:1px solid rgba(212,168,75,.28)}
+.una{background:rgba(232,112,112,.12);color:#f09a9a;border:1px solid rgba(232,112,112,.28)}
+table{width:100%;border-collapse:collapse;margin:12px 0 6px;font-size:13.5px}
+th{text-align:left;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);font-weight:700;padding:10px 11px;border-bottom:1px solid var(--line2);vertical-align:bottom}
+td{padding:11px 11px;border-bottom:1px solid var(--line);vertical-align:top}
+tbody tr:hover{background:rgba(61,214,140,.03)}
+td.n{font-variant-numeric:tabular-nums;white-space:nowrap;font-family:"IBM Plex Mono",ui-monospace,monospace}
+tr.dim td{color:var(--dim)}
+.tw{overflow-x:auto}
+.grid{display:grid;gap:14px}.g2{grid-template-columns:repeat(2,1fr)}.g3{grid-template-columns:repeat(3,1fr)}.g4{grid-template-columns:repeat(4,1fr)}
+.card{background:var(--ink2);border:1px solid var(--line);border-radius:16px;padding:18px;box-shadow:inset 0 1px 0 rgba(255,255,255,.03)}
+.card .lbl{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);font-weight:700}
+.card .big{font-size:1.55rem;font-weight:750;letter-spacing:-.03em;margin:6px 0 2px;font-variant-numeric:tabular-nums;font-family:"IBM Plex Mono",ui-monospace,monospace}
+.card .sm{font-size:11.5px;color:var(--mut)}
+.card h4{margin-top:0}
+.call{border-left:3px solid var(--acc);background:rgba(61,214,140,.05);padding:14px 18px;border-radius:0 12px 12px 0;margin:14px 0}
+.call.risk{border-color:var(--bad);background:rgba(232,112,112,.06)}
+.call.opportunity{border-color:var(--good);background:rgba(61,214,140,.06)}
+.call.correction{border-color:var(--warn);background:rgba(212,168,75,.06)}
+.call b{display:block;margin-bottom:4px;font-size:13px}
+.call p{margin:0;font-size:13.5px;color:var(--mut)}
+.chartbox{background:var(--ink2);border:1px solid var(--line);border-radius:16px;padding:18px;margin:14px 0}
+.chartbox .cap{font-size:11.5px;color:var(--dim);margin:0 0 11px}
+.cw{position:relative;height:265px}.cw.s{height:150px}.cw.t{height:330px}
+.pers{background:var(--ink2);border:1px solid var(--line);border-radius:16px;padding:17px;border-left:3px solid var(--acc)}
+.pers .pn{font-size:15.5px;font-weight:750}.pers .pt{font-size:11.5px;color:var(--mut);margin-bottom:11px}
+.pers dt{color:var(--dim);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;margin-top:9px}
+.pers dd{margin:2px 0 0;color:var(--mut);font-size:12.5px}.pers dl{margin:0}
+.tag{display:inline-block;font-size:11px;padding:3px 9px;border-radius:6px;background:var(--ink3);border:1px solid var(--line2);color:var(--mut);margin:3px 4px 3px 0;font-family:"IBM Plex Mono",ui-monospace,monospace}
+ul.t{margin:8px 0;padding-left:18px;color:var(--mut);font-size:13.5px}ul.t li{margin-bottom:6px}ul.t b{color:var(--txt)}
+.src{font-size:11.5px;color:var(--dim);margin-top:6px}
+.formula{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:11.5px;color:var(--mut)}
+.bar{height:6px;background:var(--line);border-radius:20px;overflow:hidden;margin-top:5px}
+.bar i{display:block;height:100%;border-radius:20px;background:var(--acc)}
+.fun{display:flex;flex-direction:column;gap:7px;align-items:center;margin:16px 0}
+.fst{border-radius:12px;padding:11px 16px;text-align:center;font-size:12.5px;border:1px solid var(--line);background:var(--ink2)}
+.fst b{display:block;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--acc);margin-bottom:3px}
+.fst span{color:var(--mut);font-size:11.5px}
+footer{padding:34px 0;color:var(--dim);font-size:12.5px}
+.pill{display:inline-block;font-size:11px;font-weight:700;padding:3px 10px;border-radius:6px;background:var(--ink3);border:1px solid var(--line2);font-family:"IBM Plex Mono",ui-monospace,monospace}
+.pill.hi{color:#6ee7a8;border-color:rgba(61,214,140,.4)}.pill.lo{color:#f09a9a;border-color:rgba(232,112,112,.4)}
+@media(max-width:900px){.g4{grid-template-columns:repeat(2,1fr)}.g3,.g2{grid-template-columns:1fr}.cover h1{font-size:1.85rem}}
+@media(max-width:620px){.g4{grid-template-columns:1fr}.wrap{padding:0 15px 50px}nav{padding:10px 10px 0}}
+
+/* ============================================================ skip link
+   A 17-section report with a sticky nav is a keyboard trap without this. */
+.skip{position:absolute;left:-9999px;top:0;z-index:200;padding:12px 18px;border-radius:0 0 12px 0;
+  background:var(--acc);color:#04140c;font-weight:700;font-size:13px}
+.skip:focus{left:0}
+
+/* ---------------------------------------------------------- focus rings
+   The app shell has these; the report did not. Same product, same rules. */
+a:focus-visible,button:focus-visible{outline:2px solid var(--acc);outline-offset:3px;border-radius:4px}
+
+/* -------------------------------------------------------- active section
+   Sticky nav with no current-position indicator leaves the reader lost
+   somewhere in seventeen sections. Driven by IntersectionObserver below. */
+nav a.on{background:rgba(61,214,140,.14);color:var(--acc)}
+
+/* ------------------------------------------------------------- surfaces
+   Tinted rather than black shadows, and radius that varies by nesting
+   depth instead of a uniform 16px on every box. */
+.card{border-radius:var(--r-card,16px);box-shadow:inset 0 1px 0 rgba(255,255,255,.03),0 1px 2px rgba(0,0,0,.28);
+  transition:border-color .25s var(--ease),transform .25s var(--ease)}
+.card:hover{border-color:var(--line2)}
+.chartbox{border-radius:18px}
+.pers{border-radius:14px}
+.tag,.pill,.chip{border-radius:6px}
+.bar i{transition:width .6s var(--ease)}
+
+/* ------------------------------------------------------------ film grain
+   The app shell carries a grain overlay; without it here the two surfaces
+   of the same product look like they came from different teams. */
+body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:80;opacity:.03;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+/* --------------------------------------------------- reduced motion */
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;
+    transition-duration:.01ms !important;scroll-behavior:auto !important}
+}
+
+/* -------------------------------------------------- intermediate breakpoint
+   Jumping 3 columns straight to 1 wastes half a tablet screen. */
+@media(max-width:1080px) and (min-width:901px){.g4{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:900px) and (min-width:621px){.g3{grid-template-columns:repeat(2,1fr)}}
+
+/* ================================================================== PRINT
+   This is the deliverable a marketing team prints, PDFs and takes into a
+   client meeting. On a dark background that is a wall of toner and unreadable
+   on paper. Everything below re-renders the report as a light document:
+   ink on white, borders instead of fills, charts and tables kept whole across
+   page breaks, and link targets spelled out because a printed hyperlink is
+   invisible. Screen styling is untouched. */
+@media print{
+  @page{margin:16mm 14mm}
+  html,body{background:#fff !important;color:#111 !important;font-size:10.5pt}
+  body::after,body::before{display:none !important}
+  nav,.skip,.chartbox .cw{display:none !important}
+  .wrap{max-width:none;padding:0}
+  a{color:#111 !important;text-decoration:underline}
+  /* A printed link is a dead end unless the destination is on the page. */
+  .note a[href^="http"]::after,td a[href^="http"]::after{content:" (" attr(href) ")";
+    font-size:8pt;color:#555;word-break:break-all}
+  h1,h2,h3,h4{color:#111 !important;page-break-after:avoid;break-after:avoid}
+  section{padding:14pt 0;border-bottom:1px solid #ddd;page-break-inside:auto}
+  .cover{padding:0 0 14pt;border-bottom:2px solid #111}
+  .portrait{box-shadow:none !important;border:1px solid #111 !important}
+  .cover h1{font-size:22pt}
+  .kick{color:#111 !important;background:none !important;border:1px solid #111 !important}
+  .card,.chartbox,.pers,.call,.fst{background:#fff !important;border:1px solid #ccc !important;
+    box-shadow:none !important;page-break-inside:avoid;break-inside:avoid}
+  .call{border-left:3px solid #111 !important}
+  .card .lbl,.card .sm,.note,.src,p,td,li,dd{color:#333 !important}
+  .card .big,h1,h2,h3,h4,b,th{color:#111 !important}
+  table{page-break-inside:auto;font-size:9pt}
+  tr,img{page-break-inside:avoid;break-inside:avoid}
+  thead{display:table-header-group}
+  tbody tr:hover{background:none !important}
+  /* Evidence chips must survive monochrome — they carry the observed vs
+     modelled distinction, which is the whole credibility of the document. */
+  .chip{border:1px solid #111 !important;color:#111 !important;background:none !important}
+  .chip.est{border-style:dashed !important}
+  .chip.una{border-style:dotted !important}
+  .pill,.tag{border:1px solid #999 !important;color:#111 !important;background:none !important}
+  .bar{background:#eee !important;border:1px solid #ccc}
+  .bar i{background:#111 !important}
+  footer{border-top:1px solid #ccc;padding-top:10pt;color:#555 !important}
+}
+</style>

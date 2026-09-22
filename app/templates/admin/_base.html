@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block body %}
+<nav class="admin-nav" aria-label="Admin">
+  <b>Admin</b>
+  <a href="/admin">Overview</a>
+  <a href="/admin/plans">Plans</a>
+  <a href="/admin/releases">Releases</a>
+  <a href="/admin/audit">Audit</a>
+  <a class="end" href="/">← app</a>
+</nav>
+{% block admin %}{% endblock %}
+{% endblock %}

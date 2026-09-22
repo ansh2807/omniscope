@@ -1,0 +1,98 @@
+{% extends "base.html" %}{% block title %}Compare · {{ app_name }}{% endblock %}{% block body %}
+<div class="page-head">
+  <span class="eyebrow">Battlefield</span>
+  <h1>Compare investigations</h1>
+  <p class="sub">Two stored website reports, side by side. A missing field is INSUFFICIENT EVIDENCE, not a win. Scores are the published website formula — not traffic, revenue, or share.</p>
+</div>
+
+<form method="get" action="/compare" class="bento" style="margin-bottom:28px">
+  <div class="card">
+    <label class="eyebrow" for="a">Subject A</label>
+    <select id="a" name="a" required>
+      <option value="">Select a stored website…</option>
+      {% for s in subjects %}
+      <option value="{{ s.id }}" {% if a_id == s.id %}selected{% endif %}>{{ s.name }}{% if s.domain %} · {{ s.domain }}{% endif %}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="card">
+    <label class="eyebrow" for="b">Subject B</label>
+    <select id="b" name="b" required>
+      <option value="">Select a stored website…</option>
+      {% for s in subjects %}
+      <option value="{{ s.id }}" {% if b_id == s.id %}selected{% endif %}>{{ s.name }}{% if s.domain %} · {{ s.domain }}{% endif %}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="card">
+    <button type="submit">Compare</button>
+  </div>
+</form>
+
+{% if error %}
+<div class="empty">{{ error }}</div>
+{% elif intel and intel.assessed %}
+<p>{{ intel.verdict }}</p>
+{% if intel.left_job or intel.right_job or intel.desk_rows %}
+<h2>Marketing desk</h2>
+<p class="sub">Eight basic needs, filled from each stored report. A missing need is INSUFFICIENT EVIDENCE, not a win. We do not pick a better brand.</p>
+<div class="grid4" style="margin:16px 0">
+  <div class="stat"><div class="lbl">{{ intel.left_name }} · this week</div><div class="sm">{{ intel.left_job or '—' }}</div></div>
+  <div class="stat"><div class="lbl">{{ intel.right_name }} · this week</div><div class="sm">{{ intel.right_job or '—' }}</div></div>
+</div>
+{% if intel.desk_rows %}
+<div class="table-wrap">
+<table>
+<thead><tr><th>Need</th><th>{{ intel.left_name }}</th><th>{{ intel.right_name }}</th><th></th></tr></thead>
+<tbody>
+{% for row in intel.desk_rows %}
+<tr>
+  <td>{{ row.field }}</td>
+  <td>{{ row.left }}</td>
+  <td>{{ row.right }}</td>
+  <td class="muted">{{ row.note }}</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+{% endif %}
+{% endif %}
+<div class="grid4" style="margin:20px 0">
+  <div class="stat"><div class="lbl">{{ intel.left_name }}</div><div class="big">{{ intel.left_score if intel.left_score is not none else '—' }}</div><div class="sm">{% if intel.left_href %}<a href="{{ intel.left_href }}">report</a>{% endif %}</div></div>
+  <div class="stat"><div class="lbl">{{ intel.right_name }}</div><div class="big">{{ intel.right_score if intel.right_score is not none else '—' }}</div><div class="sm">{% if intel.right_href %}<a href="{{ intel.right_href }}">report</a>{% endif %}</div></div>
+  <div class="stat"><div class="lbl">Score delta</div><div class="big">{% if intel.score_delta is not none %}{{ '%+.1f'|format(intel.score_delta) }}{% else %}—{% endif %}</div><div class="sm">B minus A</div></div>
+  <div class="stat"><div class="lbl">Shared rivals</div><div class="big">{{ intel.shared_rivals|length }}</div><div class="sm">official-site overlap</div></div>
+</div>
+
+<div class="table-wrap">
+<table>
+<thead><tr><th>Field</th><th>{{ intel.left_name }}</th><th>{{ intel.right_name }}</th><th></th></tr></thead>
+<tbody>
+{% for row in intel.rows %}
+<tr>
+  <td>{{ row.field }}</td>
+  <td>{{ row.left }}</td>
+  <td>{{ row.right }}</td>
+  <td class="muted">{{ row.note }}</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+
+<h2>Technology overlap</h2>
+<p><b>Shared</b> {{ intel.shared_tech|join(', ') or '—' }}</p>
+<p><b>Only {{ intel.left_name }}</b> {{ intel.left_only_tech|join(', ') or '—' }}</p>
+<p><b>Only {{ intel.right_name }}</b> {{ intel.right_only_tech|join(', ') or '—' }}</p>
+<p><b>Shared social platforms</b> {{ intel.shared_socials|join(', ') or '—' }}</p>
+<p><b>Shared rival domains</b> {{ intel.shared_rivals|join(', ') or '—' }}</p>
+<p class="muted">{{ intel.methodology }}</p>
+{% elif intel %}
+<div class="empty">{{ intel.reason }}</div>
+{% elif subjects %}
+<div class="empty">Pick two different stored websites.</div>
+{% else %}
+<div class="empty">No website investigations yet. Deep Analyze two companies first.</div>
+{% endif %}
+{% endblock %}

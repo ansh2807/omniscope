@@ -1,0 +1,93 @@
+{% extends "admin/_base.html" %}{% block admin %}
+<h1>{{ org.name }}</h1>
+<p class="sub">{{ org.email }}{% if org.company %} · {{ org.company }}{% endif %} · created {{ org.created_at.strftime('%d %b %Y') }}</p>
+
+<div class="card">
+  <p style="margin:0 0 6px"><b>Entitlement right now</b>
+    <span class="badge {{ 'ok' if ent.allowed else 'err' }}">{{ 'allowed' if ent.allowed else 'blocked' }}</span></p>
+  <p class="muted" style="margin:0">{{ ent.reason }}</p>
+  <p class="muted" style="margin:8px 0 0">
+    {{ ent.reports_used }} used ·
+    {% if ent.unlimited %}unlimited{% else %}{{ ent.reports_left }} left of {{ ent.reports_limit }}{% endif %}
+    · {{ ent.seats }} seat(s) · cohort max {{ ent.max_cohort_size }}</p>
+</div>
+
+<h2>Change plan or status</h2>
+<div class="card">
+  <form method="post" action="/admin/org/{{ org.id }}/update">
+    <div class="grid2">
+      <label>Plan<select name="plan_code">
+        {% for p in plans %}<option value="{{ p.code }}" {% if p.code == org.plan_code %}selected{% endif %}>{{ p.name }} — ₹{{ p.price_inr }}/mo</option>{% endfor %}
+      </select></label>
+      <label>Status<select name="status_value">
+        {% for s in ['trial','active','past_due','suspended','cancelled'] %}<option value="{{ s }}" {% if s == org.status %}selected{% endif %}>{{ s }}</option>{% endfor %}
+      </select></label>
+    </div>
+    <label>Internal notes<textarea name="notes">{{ org.notes or '' }}</textarea></label>
+    <div style="margin-top:12px"><button type="submit">Save</button></div>
+  </form>
+</div>
+
+<h2>Manual override</h2>
+<div class="card">
+  <p class="muted" style="margin-top:0">Grants access regardless of payment state — for
+  pilots, partners and support goodwill. Overrides everything else.
+  {% if org.override_until %}<br><b>Currently active until {{ org.override_until.strftime('%d %b %Y') }}</b>{% endif %}</p>
+  <form method="post" action="/admin/org/{{ org.id }}/override" class="row">
+    <input type="number" name="days" value="30" placeholder="days (0 to clear)">
+    <input type="text" name="reason" placeholder="reason">
+    <button type="submit">Apply</button>
+  </form>
+</div>
+
+<h2>Licence keys</h2>
+<table><thead><tr><th>Key</th><th>Label</th><th>Mode</th><th>Devices</th><th>Last seen</th><th></th></tr></thead><tbody>
+{% for k in keys %}
+<tr>
+  <td><code>{{ k.key }}</code></td><td>{{ k.label }}</td><td>{{ k.mode }}</td>
+  <td class="muted">{{ devices|selectattr('key','equalto',k.key)|list|length }} / {{ k.max_devices }}</td>
+  <td class="muted">{{ k.last_seen_at.strftime('%d %b %H:%M') if k.last_seen_at else 'never' }}
+    {% if k.last_seen_version %}· v{{ k.last_seen_version }}{% endif %}</td>
+  <td>{% if k.active %}
+    <form method="post" action="/key/{{ k.key }}/revoke" style="display:inline">
+      <input type="hidden" name="reason" value="revoked from admin">
+      <button type="submit" style="background:none;border:0;color:var(--bad);cursor:pointer;text-decoration:underline;padding:0;font:inherit">revoke</button>
+    </form>{% else %}<span class="badge err">revoked</span>{% endif %}</td>
+</tr>
+{% endfor %}
+</tbody></table>
+<div class="card">
+  <form method="post" action="/admin/org/{{ org.id }}/keys" class="row">
+    <input type="text" name="label" placeholder="label, e.g. Production">
+    <select name="mode"><option value="saas">saas</option><option value="selfhost">self-host</option></select>
+    <input type="number" name="max_devices" value="3">
+    <button type="submit">Issue key</button>
+  </form>
+</div>
+
+{% if devices %}
+<h2>Activated devices</h2>
+<table><thead><tr><th>Device</th><th>Host</th><th>Platform</th><th>Version</th><th>Last seen</th></tr></thead><tbody>
+{% for d in devices %}<tr><td class="muted"><code>{{ d.device_id[:16] }}…</code></td><td>{{ d.hostname or '—' }}</td>
+<td>{{ d.platform or '—' }}</td><td>{{ d.version or '—' }}</td>
+<td class="muted">{{ d.last_seen_at.strftime('%d %b %H:%M') }}</td></tr>{% endfor %}
+</tbody></table>
+{% endif %}
+
+{% if subs %}
+<h2>Subscriptions</h2>
+<table><thead><tr><th>Plan</th><th>Provider id</th><th>Status</th><th>Period ends</th></tr></thead><tbody>
+{% for s in subs %}<tr><td>{{ s.plan_code }}</td><td class="muted"><code>{{ s.provider_subscription_id or '—' }}</code></td>
+<td>{{ s.status }}</td><td class="muted">{{ s.current_period_end.strftime('%d %b %Y') if s.current_period_end else '—' }}</td></tr>{% endfor %}
+</tbody></table>
+{% endif %}
+
+{% if reports %}
+<h2>Recent reports</h2>
+<table><thead><tr><th>Subject</th><th>Created</th><th></th></tr></thead><tbody>
+{% for r in reports %}<tr><td>{{ r.subject_name }}</td>
+<td class="muted">{{ r.created_at.strftime('%d %b %H:%M') }}</td>
+<td><a href="/r/{{ r.share_slug }}">open</a></td></tr>{% endfor %}
+</tbody></table>
+{% endif %}
+{% endblock %}

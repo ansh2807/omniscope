@@ -1,0 +1,183 @@
+{% extends "base.html" %}{% block title %}{{ entity.name }} · {{ app_name }}{% endblock %}{% block body %}
+<div class="page-head">
+  <span class="eyebrow">Entity</span>
+  <h1>{{ entity.name }}</h1>
+  <p class="sub">{{ entity.kind }}{% if entity.domain %} · {{ entity.domain }}{% endif %}
+    {% if entity.last_score is not none %} · score {{ entity.last_score }}{% endif %}
+    {% if entity.watched %} · watching{% endif %}
+  </p>
+</div>
+
+<div class="bento" style="margin-bottom:28px">
+  <div class="card">
+    <span class="eyebrow">Surface</span>
+    <p class="muted">{{ entity.canonical_url or '—' }}</p>
+    <form method="post" action="/entities/{{ entity.id }}/watch" style="display:inline">
+      <button type="submit" class="ghost">{{ 'unwatch' if entity.watched else 'watch' }}</button>
+    </form>
+    {% if entity.canonical_url or entity.domain %}
+    <form method="post" action="/generate" style="display:inline">
+      <input type="hidden" name="url" value="{{ entity.canonical_url or entity.domain }}">
+      <button type="submit" class="ghost">re-analyze</button>
+    </form>
+    {% endif %}
+    {% if report %}
+    <a class="ghost" href="/r/{{ report.share_slug }}" style="display:inline-block;margin-left:8px">last report</a>
+    {% if report.payload_json %}
+    <a class="ghost" href="/r/{{ report.share_slug }}.json" style="display:inline-block;margin-left:8px">json</a>
+    {% endif %}
+    {% endif %}
+    {% if entity.kind == 'website' %}
+    <a class="ghost" href="/compare?a={{ entity.id }}" style="display:inline-block;margin-left:8px">compare</a>
+    {% endif %}
+  </div>
+</div>
+
+{% if brief %}
+<h2>Executive brief</h2>
+<ul>
+  {% for line in brief %}
+  <li>{{ line }}</li>
+  {% endfor %}
+</ul>
+<p class="muted">Restated from the last report’s critic. No new measurements.</p>
+{% endif %}
+
+{% if coverage %}
+<h2>Collection coverage</h2>
+<p class="muted">What the last website investigation measured — not how complete the company is. <a href="/coverage">all sites</a> · <a href="/unmeasured">declared unmeasured</a></p>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Slot</th><th>State</th></tr></thead>
+<tbody>
+{% for name, state in coverage.slots.items() %}
+<tr><td>{{ name }}</td><td><span class="badge run">{{ state }}</span></td></tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+<p class="muted">{{ coverage.assessed_n }} assessed · {{ coverage.empty_n }} empty · {{ coverage.unavailable_n }} unavailable/missing. {{ coverage.methodology }}</p>
+{% endif %}
+
+<h2>Timeline</h2>
+{% if timeline %}
+<div class="table-wrap">
+<table>
+<thead><tr><th>When</th><th>Kind</th><th>Event</th></tr></thead>
+<tbody>
+{% for e in timeline %}
+<tr>
+  <td class="muted mono">{{ e.at.replace('T', ' ')[:16] }}</td>
+  <td><span class="badge run">{{ e.kind }}</span>{% if e.severity %} · {{ e.severity }}{% endif %}</td>
+  <td>
+    {% if e.href %}<a href="{{ e.href }}">{{ e.title }}</a>{% else %}{{ e.title }}{% endif %}
+    {% if e.detail %}<div class="muted">{{ e.detail }}</div>{% endif %}
+  </td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+{% else %}
+<p class="muted">No stored snapshots, alerts, or news items yet.</p>
+{% endif %}
+
+<h2>Identifiers</h2>
+{% if aliases %}
+<div class="table-wrap">
+<table>
+<thead><tr><th>Kind</th><th>Value</th><th>How</th><th>Confidence</th></tr></thead>
+<tbody>
+{% for a in aliases %}
+<tr>
+  <td><span class="badge run">{{ a.kind }}{% if a.platform %} · {{ a.platform }}{% endif %}</span></td>
+  <td class="mono">{{ a.value }}</td>
+  <td class="muted">{{ a.method or '—' }}{% if a.source_url %} · {{ a.source_url }}{% endif %}</td>
+  <td class="mono">{{ '%.0f'|format(a.confidence * 100) }}%</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+{% else %}
+<p class="muted">No identifiers stored yet.</p>
+{% endif %}
+
+<h2>Linked surfaces</h2>
+{% if links %}
+<div class="table-wrap">
+<table>
+<thead><tr><th>Relation</th><th>Entity</th><th>Evidence</th><th>Confidence</th></tr></thead>
+<tbody>
+{% for link, other in links %}
+<tr>
+  <td><span class="badge run">{{ link.rel }}</span></td>
+  <td>
+    <a href="/entities/{{ other.id }}"><b>{{ other.name }}</b></a>
+    <div class="muted">{{ other.kind }}{% if other.domain %} · {{ other.domain }}{% endif %}</div>
+  </td>
+  <td class="src">{{ link.evidence }} · {{ link.method }}</td>
+  <td class="mono">{{ '%.0f'|format(link.confidence * 100) }}%</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+<p class="muted">Reciprocal links mean the website listed the account and the account listed the website — still not a legal ownership proof.</p>
+{% else %}
+<p class="muted">No hard-identifier overlap with another stored entity.</p>
+{% endif %}
+
+<h2>Linked reports</h2>
+{% if linked_reports %}
+<div class="table-wrap">
+<table>
+<thead><tr><th>Surface</th><th>Report</th></tr></thead>
+<tbody>
+{% for other, rep in linked_reports %}
+<tr>
+  <td>{{ other.name }} <span class="muted">{{ other.kind }}</span></td>
+  <td><a href="/r/{{ rep.share_slug }}">{{ rep.subject_name }}</a></td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+{% else %}
+<p class="muted">No reports on linked surfaces yet.</p>
+{% endif %}
+
+<h2>Documents mentioning this entity</h2>
+{% if documents %}
+<div class="table-wrap">
+<table>
+<thead><tr><th>File</th><th>Excerpt</th></tr></thead>
+<tbody>
+{% for d in documents %}
+<tr><td>{{ d.filename }}</td><td class="muted">{{ d.excerpt[:160] }}</td></tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+{% else %}
+<p class="muted">No uploaded document text contains this name or domain.</p>
+{% endif %}
+
+<h2>Latest evidence</h2>
+{% if evidence %}
+<div class="table-wrap">
+<table>
+<thead><tr><th>Claim</th><th>Source</th><th>Method</th></tr></thead>
+<tbody>
+{% for e in evidence %}
+<tr><td>{{ e.claim }}</td><td class="src">{{ e.source_url|truncate(48) }}</td><td>{{ e.method }}</td></tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+{% else %}
+<p class="muted">Evidence lands here after a website Deep Analyze.</p>
+{% endif %}
+
+<p class="muted" style="margin-top:24px"><a href="/entities">← all entities</a></p>
+{% endblock %}

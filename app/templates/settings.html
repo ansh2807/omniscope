@@ -1,0 +1,97 @@
+{% extends "base.html" %}{% block title %}Settings · {{ app_name }}{% endblock %}{% block body %}
+<p class="back"><a href="/">← Workspace</a></p>
+<div class="page-head">
+  <h1>Settings</h1>
+  <p class="sub">Everything here is optional — the engine runs without any of it. These just make reports better. Changes apply immediately, no restart.</p>
+</div>
+
+{% if form_error %}<div class="card soft-bad"><p class="flash">{{ form_error }}</p></div>{% endif %}
+{% if saved %}<div class="card soft-ok"><p class="flash">Saved. {{ saved }} setting(s) updated and applied.</p></div>{% endif %}
+{% if purged %}<div class="card soft-ok"><p class="flash">Cleared. {{ purged }} report(s), {{ jobs or 0 }} collection job(s) and the cache were deleted.</p></div>{% endif %}
+
+<h2>Source status</h2>
+<p class="muted" style="margin-top:0">Configuration state.{% if operator_ok %} To test each source against a real page, <a href="/diagnostics">run diagnostics</a>.{% endif %}</p>
+{% for key, s in status.items() %}
+<div class="card flat">
+  <p style="margin:0 0 6px">
+    <b>{{ s.label }}</b>
+    <span class="badge {{ 'ok' if s.on else 'warn' }}">{{ 'active' if s.on else 'off' }}</span>
+    {% if key == 'browser' and not s.installed %}<span class="badge err">not installed</span>{% endif %}
+  </p>
+  <p class="muted" style="margin:0">{{ s.why }}</p>
+  {% if not s.on %}<p class="muted" style="margin:8px 0 0"><b style="color:var(--txt)">To enable:</b> {{ s.fix }}</p>{% endif %}
+</div>
+{% endfor %}
+
+<form method="post" action="/settings">
+<h2>Operator token</h2>
+<p class="muted" style="margin-top:0">Required to save keys. It lives on the data volume as <code>.operator-token</code> (next to reports). On the droplet that is <code>/srv/data/.operator-token</code> inside the app container. The value is never shown here.</p>
+<label>Operator token<input type="password" name="operator_token" value="" autocomplete="off" placeholder="paste to save"></label>
+
+<h2>Search / discovery</h2>
+<p class="muted" style="margin-top:0">Unlocks Discover, competitor discovery, page-one SEO and press mentions. Paste one key — provider is selected automatically.</p>
+<label>Serper API key<input type="password" name="SERPER_API_KEY" value="{{ env.get('SERPER_API_KEY','') }}" autocomplete="off" placeholder="from serper.dev"></label>
+<label>Brave Search API key <span class="h">alternative to Serper</span><input type="text" name="BRAVE_API_KEY" value="{{ env.get('BRAVE_API_KEY','') }}"></label>
+<div class="grid2">
+  <label>Google CSE key<input type="text" name="GOOGLE_CSE_KEY" value="{{ env.get('GOOGLE_CSE_KEY','') }}"></label>
+  <label>Google CSE cx<input type="text" name="GOOGLE_CSE_CX" value="{{ env.get('GOOGLE_CSE_CX','') }}"></label>
+</div>
+
+<h2>YouTube Data API</h2>
+<p class="muted" style="margin-top:0">Optional once the browser tier is on. Gives exact view counts and real publish dates.</p>
+<label>YouTube API key<input type="text" name="YOUTUBE_API_KEY" value="{{ env.get('YOUTUBE_API_KEY','') }}"></label>
+
+<h2>Browser tier</h2>
+<p class="muted" style="margin-top:0">Reads public pages logged out. This removes the API-key requirement for Instagram and YouTube.</p>
+<label>Mode
+  <select name="BROWSER_MODE">
+    {% for m, desc in [('auto','auto — use it when cheaper methods come back empty (recommended)'),('always','always — prefer it for Instagram and YouTube'),('off','off — official APIs and plain HTTP only')] %}
+    <option value="{{ m }}" {% if env.get('BROWSER_MODE','auto') == m %}selected{% endif %}>{{ desc }}</option>
+    {% endfor %}
+  </select></label>
+
+<h2>Storage</h2>
+<div class="card flat">
+  <div class="grid3" style="margin-bottom:12px">
+    <div class="stat" style="margin:0">
+      <div class="lbl">Reports</div>
+      <div class="big">{{ usage.reports_mb }}</div>
+      <div class="sm">MB on disk</div>
+    </div>
+    <div class="stat" style="margin:0">
+      <div class="lbl">HTTP cache</div>
+      <div class="big">{{ usage.cache_mb }}</div>
+      <div class="sm">MB on disk</div>
+    </div>
+    <div class="stat" style="margin:0">
+      <div class="lbl">Database</div>
+      <div class="big">{{ usage.db_mb }}</div>
+      <div class="sm">MB (source data)</div>
+    </div>
+  </div>
+  <p class="muted" style="margin:0">
+    Each report is deleted after <b>{{ report_ttl_label }}</b>. Download
+    HTML, JSON or Word before then — the server does not keep a copy. Change
+    <code>REPORT_TTL_MINUTES</code> in <code>.env</code> (0 falls back to
+    <code>RETENTION_DAYS</code>). <code>MAX_REPORTS</code> and <code>MAX_CACHE_MB</code>
+    still cap disk use.
+  </p>
+</div>
+
+<h2>Share links</h2>
+<label>Public base URL <span class="h">used when building shareable report links</span>
+<input type="text" name="PUBLIC_BASE_URL" value="{{ env.get('PUBLIC_BASE_URL','') }}" placeholder="https://…"></label>
+
+<div style="margin-top:24px"><button type="submit">Save settings</button></div>
+</form>
+
+<h2>Clear stored data</h2>
+<div class="card soft-bad">
+  <p class="muted" style="margin:0 0 14px">Deletes every stored report, the collected source data behind each one, and the entire HTTP cache. Shortlists, accounts and billing records are kept. This cannot be undone.</p>
+  <form method="post" action="/settings/purge"
+        onsubmit="return confirm('Delete every stored report, its collected source data and the cache? This cannot be undone.')">
+    <label>Operator token<input type="password" name="operator_token" value="" autocomplete="off" placeholder="required to delete"></label>
+    <button type="submit" class="danger">Delete everything</button>
+  </form>
+</div>
+{% endblock %}
